@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Terms, TermsAgreement
+
 from ..common.admin import BaseModelAdmin
+from .models import Terms, TermsAgreement
 
 
 # Register your models here.
