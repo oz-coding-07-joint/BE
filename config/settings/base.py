@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-env_path = BASE_DIR / ".envs" / f"{os.getenv('DJANGO_ENV', 'prod')}.env"
+env_path = BASE_DIR / ".envs" / f".{os.getenv('DJANGO_ENV', 'prod')}.env"
 load_dotenv(dotenv_path=env_path)
 
 
@@ -49,7 +49,7 @@ DJANGO_APPS = [
 
 PACKAGE = [
     "corsheaders",
-    "drf-spectacular"  # 디버그일 때만 url 추가되도록 할 것
+    "drf_spectacular",  # 디버그일 때만 url 추가되도록 할 것
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
@@ -146,7 +146,7 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "users.User"
+# AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
