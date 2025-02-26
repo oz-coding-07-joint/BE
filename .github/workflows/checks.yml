@@ -8,9 +8,17 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-        # 체크아웃 해야 최신 코드를 가져옴
+      # 캐시 삭제
+      - name: Clear cache
+        run: |
+          rm -rf ~/.cache/pip
+          rm -rf .tox      
+
+      # 체크아웃 해야 최신 코드를 가져옴
       - name: Check out the codes
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
 
         # 파이썬 설치
       - name: Setup python environment
@@ -32,10 +40,11 @@ jobs:
 
       - name: Install dependencies
         run: | # poetry 자기 자신을 설치하지 않음
-          poetry install --no-root
+          poetry install --no-root --no-cache
 
       - name: Run black
         run: |
+          poetry run black --version
           poetry run black . --check
         # --check: 코드를 수정하지 않고 체크만 함
 
