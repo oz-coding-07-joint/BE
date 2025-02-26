@@ -28,5 +28,3 @@ class TermsAgreement(BaseModel):
 
     class Meta:
         db_table = "terms_agreement"
-
-
