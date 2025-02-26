@@ -1,0 +1,19 @@
+name: Django CI
+
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Run black
+        run: |
+          poetry run black . --check
+        # --check: 코드를 수정하지 않고 체크만 함
+
+      - name: Run isort
+        run: |
+          poetry run isort . --check --diff
+        # -diff: 달라진 점을 보여줌
