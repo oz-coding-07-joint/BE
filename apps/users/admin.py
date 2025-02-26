@@ -31,10 +31,7 @@ class UserAdmin(BaseModelAdmin):
         유저 생성 시 비밀번호 해쉬화
         """
         if change and "is_superuser" in form.changed_data:
-            if (
-                not obj.is_superuser
-                and User.objects.filter(is_superuser=True).count() == 1
-            ):
+            if not obj.is_superuser and User.objects.filter(is_superuser=True).count() == 1:
                 raise ValidationError("최소 1명의 superuser는 있어야 합니다.")
 
         if obj.password:

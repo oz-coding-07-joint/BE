@@ -24,6 +24,4 @@ class Homework(BaseModel):
 
 
 class HomeworkFeedback(BaseModel):
-    homework = models.ForeignKey(
-        Homework, related_name="homework_feedback", on_delete=models.CASCADE
-    )
+    homework = models.ForeignKey(Homework, related_name="homework_feedback", on_delete=models.CASCADE)
