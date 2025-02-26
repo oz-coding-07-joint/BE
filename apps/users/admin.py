@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 
 from apps.common.admin import BaseModelAdmin
 
-from .models import Terms, TermsAgreement, User
+from .models import User
 
 
 # Register your models here.
@@ -41,13 +41,3 @@ class UserAdmin(BaseModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
-
-
-@admin.register(Terms)
-class TermsAdmin(BaseModelAdmin):
-    pass
-
-
-@admin.register(TermsAgreement)
-class TermsAgreementAdmin(BaseModelAdmin):
-    pass
