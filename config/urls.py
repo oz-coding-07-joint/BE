@@ -27,10 +27,10 @@ from config.settings import base
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/v1/users/", include("users.urls")),
-    path("api/v1/terms/", include("terms.urls")),
-    path("api/v1/courses/", include("courses.urls")),
-    path("api/v1/assignments/", include("assignments.urls")),
+    path("api/v1/users/", include("apps.users.urls")),
+    path("api/v1/terms/", include("apps.terms.urls")),
+    path("api/v1/courses/", include("apps.courses.urls")),
+    path("api/v1/assignments/", include("apps.assignments.urls")),
 ]
 
 if base.DEBUG:
