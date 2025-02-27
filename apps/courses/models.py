@@ -18,7 +18,7 @@ class Lecture(BaseModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     instructor = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
-    introduction = models.TextField()
+    introduction = models.CharField(max_length=1000)
 
     class Meta:
         db_table = "lecture"
@@ -28,7 +28,6 @@ class LectureCourse(BaseModel):
     lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
     material_url = models.CharField(max_length=255)
-    file_type = models.CharField(max_length=10)
 
     class Meta:
         db_table = "lecture_course"
