@@ -22,6 +22,15 @@ class Homework(BaseModel):
     content = models.TextField()
     status = models.BooleanField(default=True)
 
+    class Meta:
+        db_table = "homework"
+
 
 class HomeworkFeedback(BaseModel):
     homework = models.ForeignKey(Homework, related_name="homework_feedback", on_delete=models.CASCADE)
+    instructor = models.ForeignKey(Student, on_delete=models.CASCADE)
+    title = models.CharField(max_length=50)
+    content = models.TextField()
+
+    class Meta:
+        db_table = "homework_feedback"
