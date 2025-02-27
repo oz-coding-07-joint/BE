@@ -31,7 +31,6 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
     nickname = models.CharField(max_length=20, unique=True)
     phone_number = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=130)
-    profile_image = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(max_length=50, null=True, blank=True)
     provider_id = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -71,7 +70,7 @@ class Student(BaseModel):
 
 class Instructor(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    experience = models.TextField(null=True, blank=True)
+    experience = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:
         db_table = "instructor"
