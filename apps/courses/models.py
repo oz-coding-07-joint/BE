@@ -37,7 +37,7 @@ class LectureCourse(BaseModel):
 class CourseMaterial(BaseModel):
     lecture_course = models.ForeignKey(LectureCourse, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
-    lecture_url = models.CharField(max_length=255)
+    lecture_video_url = models.CharField(max_length=255)
 
     class Meta:
         db_table = "course_material"
