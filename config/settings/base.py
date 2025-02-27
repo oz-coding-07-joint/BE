@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-env_path = BASE_DIR / ".envs" / f"{os.getenv('DJANGO_ENV', 'prod')}.env"
+env_path = BASE_DIR / ".envs" / f".{os.getenv('DJANGO_ENV', 'prod')}.env"
 load_dotenv(dotenv_path=env_path)
 
 
@@ -48,18 +48,22 @@ DJANGO_APPS = [
 ]
 
 PACKAGE = [
-    "corsheaders",
-    "drf-spectacular"  # 디버그일 때만 url 추가되도록 할 것
+    # "corsheaders",
+    "drf_spectacular",  # 디버그일 때만 url 추가되도록 할 것
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "apps.users.apps.UsersConfig",
+    "apps.terms.apps.TermsConfig",
+    "apps.courses.apps.CoursesConfig",
+    "apps.assignments.apps.AssignmentsConfig",
 ]
 
 
 INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    # "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -150,18 +154,16 @@ AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = []
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
-CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
-
-CSRF_TRUSTED_ORIGINS = []
-CSRF_COOKIE_DOMAIN = ".umdoong.shop"
-SESSION_COOKIE_DOMAIN = ".umdoong.shop"
+# CORS_ALLOW_ALL_ORIGINS = False
+# CORS_ALLOWED_ORIGINS = []
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
+# CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
+#
+# CSRF_TRUSTED_ORIGINS = []
+# CSRF_COOKIE_DOMAIN = ".umdoong.shop"
+# SESSION_COOKIE_DOMAIN = ".umdoong.shop"
