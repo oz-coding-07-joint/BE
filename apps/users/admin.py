@@ -27,8 +27,8 @@ class UserAdmin(BaseModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """
-        최후의 superuser가 해제되지 않도록 방지
-        유저 생성 시 비밀번호 해쉬화
+        1) 최후의 superuser가 해제되지 않도록 방지
+        2) 유저 생성 시 비밀번호 해쉬화
         """
         if change and "is_superuser" in form.changed_data:
             if not obj.is_superuser and User.objects.filter(is_superuser=True).count() == 1:
