@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
 class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=30)
-    nickname = models.CharField(max_length=50, unique=True)
+    nickname = models.CharField(max_length=20, unique=True)
     phone_number = models.CharField(max_length=50, unique=True)
     password = models.CharField(max_length=130)
     profile_image = models.CharField(max_length=255, null=True, blank=True)
@@ -45,13 +45,13 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
 
     def has_perm(self, perm, obj=None):
         # 사용자가 superuser인 경우 Django의 모든 권한 부여
-        if self.is_superuser:
+        if self.is_active and self.is_superuser:
             return True
         return False
 
     def has_module_perms(self, app_label):
         # 사용자가 superuser인 경우 모든 앱의 권한을 부여
-        if self.is_superuser:
+        if self.is_active and self.is_superuser:
             return True
         return False
 
