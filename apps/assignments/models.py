@@ -1,36 +1,28 @@
 from django.db import models
 
 from apps.common.models import BaseModel
-from apps.courses.models import Lecture
-from apps.users.models import Student
+from apps.common.utils import assignment_comment_file_path, assignment_material_path
+from apps.courses.models import ChapterVideo
+from apps.users.models import User
 
 
-class Task(BaseModel):
-    lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
+class Assignment(BaseModel):
+    chapter_video = models.ForeignKey(ChapterVideo, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
-    content = models.TextField()
+    content = models.CharField(max_length=1000)
+    file_url = models.FileField(upload_to=assignment_material_path, null=True, blank=True)
 
     class Meta:
-        db_table = "task"
+        db_table = "assignment"
 
 
-class Homework(BaseModel):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+class AssignmentComment(BaseModel):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    parent_id = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
     title = models.CharField(max_length=50)
-    file_url = models.CharField(max_length=255)
-    content = models.TextField()
-    status = models.BooleanField(default=True)
+    file_url = models.FileField(upload_to=assignment_comment_file_path, null=True, blank=True)
+    content = models.CharField(max_length=500)
 
     class Meta:
-        db_table = "homework"
-
-
-class HomeworkFeedback(BaseModel):
-    homework = models.ForeignKey(Homework, related_name="homework_feedback", on_delete=models.CASCADE)
-    instructor = models.ForeignKey(Student, on_delete=models.CASCADE)
-    title = models.CharField(max_length=50)
-    content = models.TextField()
-
-    class Meta:
-        db_table = "homework_feedback"
+        db_table = "assignment_comment"
