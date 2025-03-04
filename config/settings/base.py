@@ -57,6 +57,8 @@ PACKAGE = [
     "apps.terms.apps.TermsConfig",
     "apps.courses.apps.CoursesConfig",
     "apps.assignments.apps.AssignmentsConfig",
+    "apps.registrations.apps.RegistrationsConfig",
+    "apps.reviews.apps.ReviewsConfig",
 ]
 
 
