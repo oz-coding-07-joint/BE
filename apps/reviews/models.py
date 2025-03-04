@@ -4,6 +4,7 @@ from apps.common.models import BaseModel
 from apps.courses.models import Lecture
 from apps.users.models import User
 
+
 class Review(BaseModel):
     lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

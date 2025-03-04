@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from ..common.admin import BaseModelAdmin
-from .models import Course, ChapterVideo, Lecture, LectureChapter
+from .models import ChapterVideo, Course, Lecture, LectureChapter
 
 
 @admin.register(Course)
