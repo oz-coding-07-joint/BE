@@ -24,7 +24,7 @@ class Terms(BaseModel):
 class TermsAgreement(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     terms = models.ForeignKey("Terms", on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(null=False, default=False)
 
     class Meta:
         db_table = "terms_agreement"
