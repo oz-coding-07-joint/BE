@@ -1,19 +1,14 @@
 from django.contrib import admin
 
 from ..common.admin import BaseModelAdmin
-from .models import Homework, HomeworkFeedback, Task
+from .models import Assignment, AssignmentComment
 
 
-@admin.register(Task)
-class TaskAdmin(BaseModelAdmin):
+@admin.register(Assignment)
+class AssignmentAdmin(BaseModelAdmin):
     pass
 
 
-@admin.register(Homework)
-class HomeworkAdmin(BaseModelAdmin):
-    pass
-
-
-@admin.register(HomeworkFeedback)
-class HomeworkFeedbackAdmin(BaseModelAdmin):
+@admin.register(AssignmentComment)
+class AssignmentCommentAdmin(BaseModelAdmin):
     pass
