@@ -42,7 +42,8 @@ class EnrollmentRegistrationView(APIView):
             return Response({"detail": "수강 신청 완료"}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+# -----------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------
 
 class EnrollmentInProgressView(APIView):
     @extend_schema(
