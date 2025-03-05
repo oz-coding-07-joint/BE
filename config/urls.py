@@ -30,7 +30,7 @@ urlpatterns = [
     path("api/v1/terms/", include("apps.terms.urls")),
     path("api/v1/courses/", include("apps.courses.urls")),
     path("api/v1/assignments/", include("apps.assignments.urls")),
-    path("api/v1/requirements/", include("apps.requirements.urls")),
+    path("api/v1/registrations/", include("apps.registrations.urls")),
     path("api/v1/reviews/", include("apps.reviews.urls")),
 ]
 
