@@ -7,7 +7,7 @@ from .models import Review
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ["id", "student", "star", "content"]
+        fields = ["id", "student", "student_nickname", "star", "content"]
 
 
 # 내가 작성한 후기 조회
