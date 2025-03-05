@@ -1,7 +1,7 @@
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiExample
 
 from .models import Assignment, AssignmentComment
 from .serializers import AssignmentCommentSerializer, AssignmentSerializer
@@ -23,8 +23,11 @@ class AssignmentView(APIView):
         return Response(
             {"chapter_video_id": chapter_video_id, "assignments": serializer.data}, status=status.HTTP_200_OK
         )
+
+
 # -----------------------------------------------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------
+
 
 class AssignmentCommentView(APIView):
     @extend_schema(

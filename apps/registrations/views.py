@@ -1,7 +1,7 @@
+from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiExample
 
 from .models import Enrollment
 from .serializers import EnrollmentDetailSerializer, EnrollmentSerializer
@@ -42,8 +42,11 @@ class EnrollmentRegistrationView(APIView):
             return Response({"detail": "수강 신청 완료"}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # -----------------------------------------------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------
+
 
 class EnrollmentInProgressView(APIView):
     @extend_schema(
