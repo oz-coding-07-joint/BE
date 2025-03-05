@@ -19,8 +19,7 @@ class Assignment(BaseModel):
 class AssignmentComment(BaseModel):
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    parent_id = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
-    title = models.CharField(max_length=50)
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
     file_url = models.FileField(upload_to=assignment_comment_file_path, null=True, blank=True)
     content = models.CharField(max_length=500)
 
