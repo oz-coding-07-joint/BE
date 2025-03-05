@@ -40,6 +40,7 @@ class ReviewView(APIView):
     def post(self, request, lecture_id):
         data = request.data.copy()
         data["lecture"] = lecture_id  # URL로부터 전달받은 lecture_id를 데이터에 추가
+        data["student"] = request.user.id
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
