@@ -16,7 +16,7 @@ class AssignmentCommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AssignmentComment
-        fields = ["id", "user", "parent", "file_url", "content", "replies"]
+        fields = ["id", "user", "parent", "file_url", "content", "created_at", "replies"]
 
     def get_replies(self, obj):
         qs = obj.replies.all()
