@@ -10,6 +10,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
         fields = ["id", "chapter_video", "title", "content", "file_url"]
 
 
+# 강의 과제 제출, 수강생 과제 및 피드백 목록 조회
 class AssignmentCommentSerializer(serializers.ModelSerializer):
     replies = serializers.SerializerMethodField()
 
