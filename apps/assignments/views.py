@@ -10,17 +10,16 @@ from .serializers import AssignmentCommentSerializer, AssignmentSerializer
 class AssignmentView(APIView):
     @extend_schema(
         summary="강의 챕터별 과제 목록 조회",
-        description="chapter_video_id와 연결된 과제들을 조회합니다.",
+        description="lecture_chapter_id와 연결된 과제들을 조회합니다.",
         responses={200: AssignmentSerializer(many=True)},
         tags=["Assignment"],
     )
     # 강의 챕터별 과제 목록 조회
-    def get(self, request, chapter_video_id):
-        # chapter_video_id와 연결된 과제들을 조회
-        assignments = Assignment.objects.filter(chapter_video_id=chapter_video_id)
+    def get(self, request, lecture_chapter_id):
+        assignments = Assignment.objects.filter(chapter_video_id=lecture_chapter_id)
         serializer = AssignmentSerializer(assignments, many=True)
         return Response(
-            {"chapter_video_id": chapter_video_id, "assignments": serializer.data}, status=status.HTTP_200_OK
+            {"lecture_chapter_id": lecture_chapter_id, "assignments": serializer.data}, status=status.HTTP_200_OK
         )
 
 
