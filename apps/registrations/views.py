@@ -52,7 +52,6 @@ class EnrollmentInProgressView(APIView):
     @extend_schema(
         summary="수강 중인 수업 조회",
         description="현재 수강 중인 수업을 조회합니다.",
-        request=EnrollmentDetailSerializer,
         responses={
             200: EnrollmentDetailSerializer(many=True),
             404: OpenApiExample("오류 예시", value={"detail": "수강 중인 클래스가 없습니다."}),

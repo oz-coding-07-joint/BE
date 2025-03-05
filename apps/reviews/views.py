@@ -11,7 +11,6 @@ class ReviewView(APIView):
     @extend_schema(
         summary="수업 후기 조회",
         description=("특정 강의에 대한 후기를 조회합니다."),
-        request=ReviewSerializer,
         responses={
             200: ReviewDetailSerializer(many=True),
             404: OpenApiExample("후기 없음", value={"error": "강의 후기를 찾을 수 없습니다"}),

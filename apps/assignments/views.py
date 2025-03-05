@@ -11,7 +11,6 @@ class AssignmentView(APIView):
     @extend_schema(
         summary="강의 챕터별 과제 목록 조회",
         description="chapter_video_id와 연결된 과제들을 조회합니다.",
-        request=AssignmentSerializer,
         responses={200: AssignmentSerializer(many=True)},
         tags=["Assignment"],
     )
@@ -33,7 +32,6 @@ class AssignmentCommentView(APIView):
     @extend_schema(
         summary="수강생 과제 및 피드백 목록 조회",
         description="부모가 없는 최상위 댓글만 조회합니다.",
-        request=AssignmentCommentSerializer,
         responses={200: AssignmentCommentSerializer(many=True)},
         tags=["Assignment"],
     )
