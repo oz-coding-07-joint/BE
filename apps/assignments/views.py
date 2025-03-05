@@ -36,7 +36,10 @@ class AssignmentCommentView(APIView):
     )
     # 수강생 과제 및 피드백 목록 조회
     def get(self, request):
-        # 부모가 없는 최상위 댓글만 조회합니다.
+        """
+        학생이 제출한 과제는 정적으로 조회,
+        과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
+        """
         comments = AssignmentComment.objects.filter(parent__isnull=True)
         serializer = AssignmentCommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
