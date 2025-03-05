@@ -40,7 +40,7 @@ class AssignmentCommentView(APIView):
         학생이 제출한 과제는 정적으로 조회,
         과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
         """
-        comments = AssignmentComment.objects.filter(parent__isnull=True)
+        comments = AssignmentComment.objects.filter(parent__isnull=True, user=request.user)
         serializer = AssignmentCommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
