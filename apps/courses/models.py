@@ -47,10 +47,11 @@ class ChapterVideo(BaseModel):
 
 
 class ProgressTracking(BaseModel):
-    student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, null=True)
     chapter_video = models.ForeignKey(ChapterVideo, on_delete=models.CASCADE)
     progress = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
     is_completed = models.BooleanField(default=False)  # 강의 완료 여부
+    last_watched_time = models.FloatField(default=0.0)  # 마지막 시청 시간 (초 단위)
 
     class Meta:
         db_table = "progress_tracking"
