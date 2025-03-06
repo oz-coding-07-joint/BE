@@ -19,6 +19,20 @@ class UserManager(BaseUserManager):
     def withdraw_staff(self):
         return self.filter(is_staff=True, is_active=False)
 
+    def create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError("이메일 주소는 필수입니다.")
+        if not password:
+            raise ValueError("비밀번호는 필수입니다.")
+        email = self.normalize_email(email)  # 이메일 정규화
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        # self._db는 UserManager에서 사용 중인 데이터베이스를 말함
+        user.save(
+            using=self._db
+        )  # 다중 데이터 베이스를 사용하는 상황에서 정확히 지정해주기 위함이지만 단일에서도 관례적으로 사용
+        return user
+
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
