@@ -11,12 +11,16 @@ from .views import (
     LoginView,
     LogoutView,
     MyinfoView,
+    SendEmailVerificationCodeView,
     SignUpView,
     Social_profile_create,
+    VerifyEmailCodeView,
     WithdrawalView,
 )
 
 urlpatterns = [
+    path("auth/send-email-verification/", SendEmailVerificationCodeView.as_view(), name="send-email-verification"),
+    path("auth/verify-email-code/", VerifyEmailCodeView.as_view(), name="verify-email-code"),
     path("signup/", SignUpView.as_view(), name="signup"),
     path("login/", LoginView.as_view(), name="login"),
     path("kakao-login/", KakaoLoginView.as_view(), name="kakao-login"),
