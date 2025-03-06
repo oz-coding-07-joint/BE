@@ -24,10 +24,20 @@ class UserAdmin(BaseModelAdmin):
             form.base_fields["is_superuser"].disabled = True
             form.base_fields["is_staff"].disabled = True
         return form
+    
+    def get_readonly_fields(self, request, obj=None):
+        """
+        마지막 superuser가 존재하면 해당 필드를 읽기 전용으로 설정
+        """
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if obj and obj.is_superuser and User.objects.filter(is_superuser=True).count() == 1:
+            readonly_fields = readonly_fields + ('is_superuser',)
+        
+        return readonly_fields
 
     def save_model(self, request, obj, form, change):
         """
-        1) 최후의 superuser가 해제되지 않도록 방지
+        1) 최후의 superuser가 해제되지 않도록 2차 방지
         2) 유저 생성 시 비밀번호 해쉬화
         """
         if change and "is_superuser" in form.changed_data:
@@ -38,3 +48,4 @@ class UserAdmin(BaseModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
+
