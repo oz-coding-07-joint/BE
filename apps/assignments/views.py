@@ -11,11 +11,17 @@ class AssignmentView(APIView):
     @extend_schema(
         summary="강의 챕터별 과제 목록 조회",
         description="lecture_chapter_id와 연결된 과제들을 조회합니다.",
-        responses={200: AssignmentSerializer(many=True)},
+        responses={
+            200: AssignmentSerializer(many=True),
+            401: OpenApiExample("오류 예시", value={"error": "잘못된 lecture_chapter_id 입니다."}),
+        },
         tags=["Assignment"],
     )
     # 강의 챕터별 과제 목록 조회
     def get(self, request, lecture_chapter_id):
+        if lecture_chapter_id <= 0:
+            return Response({"error": "잘못된 lecture_chapter_id 입니다."}, status=status.HTTP_401_UNAUTHORIZED)
+
         assignments = Assignment.objects.filter(chapter_video_id=lecture_chapter_id)
         serializer = AssignmentSerializer(assignments, many=True)
         return Response(
@@ -31,7 +37,10 @@ class AssignmentCommentView(APIView):
     @extend_schema(
         summary="수강생 과제 및 피드백 목록 조회",
         description="부모가 없는 최상위 댓글만 조회합니다.",
-        responses={200: AssignmentCommentSerializer(many=True)},
+        responses={
+            200: AssignmentCommentSerializer(many=True),
+            400: OpenApiExample("오류 예시", value={"error": "유효하지 않은 요청입니다."}),
+        },
         tags=["Assignment"],
     )
     # 수강생 과제 및 피드백 목록 조회
@@ -40,6 +49,9 @@ class AssignmentCommentView(APIView):
         학생이 제출한 과제는 정적으로 조회,
         과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
         """
+        if not request.user or not request.user.is_authenticated:
+            return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         comments = AssignmentComment.objects.filter(parent__isnull=True, user=request.user)
         serializer = AssignmentCommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
