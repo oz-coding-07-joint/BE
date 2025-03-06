@@ -168,7 +168,7 @@ REST_FRAMEWORK = {
 # CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
 # CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
 #
-# CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8000"]
 # CSRF_COOKIE_DOMAIN = ".umdoong.shop"
 # SESSION_COOKIE_DOMAIN = ".umdoong.shop"
 
