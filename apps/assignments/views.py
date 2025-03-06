@@ -84,9 +84,9 @@ class AssignmentCommentView(APIView):
         except Assignment.DoesNotExist:
             return Response({"detail": "해당 과제를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 요청 데이터에 assignment ID 추가
         data = request.data.copy()
         data["assignment"] = assignment.id
+        data["user"] = request.user.id
 
         serializer = AssignmentCommentSerializer(data=data)
         if serializer.is_valid():
