@@ -6,7 +6,7 @@ DEBUG = True
 
 REFRESH_TOKEN_COOKIE_SECURE = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [os.getenv("DJANGO_ALLOWED_HOSTS"), "localhost"]
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
