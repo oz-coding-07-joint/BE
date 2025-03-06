@@ -171,3 +171,12 @@ REST_FRAMEWORK = {
 # CSRF_TRUSTED_ORIGINS = []
 # CSRF_COOKIE_DOMAIN = ".umdoong.shop"
 # SESSION_COOKIE_DOMAIN = ".umdoong.shop"
+
+# Email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.naver.com"
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
