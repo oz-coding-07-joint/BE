@@ -3,6 +3,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.courses.models import Lecture
+from apps.registrations.models import Enrollment
+
 from .models import Review
 from .serializers import ReviewDetailSerializer, ReviewSerializer
 
@@ -38,9 +41,30 @@ class ReviewView(APIView):
     )
     # 후기 등록
     def post(self, request, lecture_id):
+        # 강의 객체를 가져와서 수강 여부 확인에 사용
+        try:
+            lecture = Lecture.objects.get(id=lecture_id)
+        except Lecture.DoesNotExist:
+            return Response({"detail": "해당 강의를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 해당 강의의 수강중인 학생인지 확인 (Enrollment에서 is_active=True)
+        if not Enrollment.objects.filter(student=request.user, course=lecture.course, is_active=True).exists():
+            return Response(
+                {"detail": "해당 강의를 수강 중인 학생만 후기를 등록할 수 있습니다."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # 이미 후기를 작성한 경우, 한 강의당 한 번만 작성 가능하도록 체크
+        if Review.objects.filter(lecture=lecture, student=request.user).exists():
+            return Response(
+                {"detail": "한 강의당 한 번만 후기를 작성할 수 있습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         data = request.data.copy()
-        data["lecture"] = lecture_id  # URL로부터 전달받은 lecture_id를 데이터에 추가
+        data["lecture"] = lecture_id
         data["student"] = request.user.id
+
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
