@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+from django_softdelete.admin import GlobalObjectsModelAdmin
 
 from apps.common.admin import BaseModelAdmin
 
@@ -9,13 +10,13 @@ from .models import User
 
 # Register your models here.
 @admin.register(User)
-class UserAdmin(BaseModelAdmin):
+class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
     # 표시할 컬럼
-    list_display = ("email", "nickname", "is_staff", "is_active", "is_superuser")
+    list_display = ("email", "nickname", "is_staff", "is_active", "is_superuser", "deleted_at")
     # 검색 기능 설정
     search_fields = ("email", "nickname")
     # 필터링 조건
-    list_filter = ("is_active", "is_staff", "is_superuser")
+    list_filter = ("is_active", "is_staff", "is_superuser", "deleted_at")
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
