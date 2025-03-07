@@ -1,12 +1,12 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
-from django_softdelete.models import SoftDeleteModel
+from django_softdelete.models import SoftDeleteManager, SoftDeleteModel
 
 from apps.common.models import BaseModel
 
 
-class UserManager(BaseUserManager):
+class UserManager(BaseUserManager, SoftDeleteManager):
     def active_user(self):
         return self.filter(is_active=True)
 
