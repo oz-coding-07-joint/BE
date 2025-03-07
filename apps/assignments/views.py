@@ -44,7 +44,7 @@ class AssignmentCommentView(APIView):
         tags=["Assignment"],
     )
     # 수강생 과제 및 피드백 목록 조회
-    def get(self, request):
+    def get(self, request, assignment_id):
         """
         학생이 제출한 과제는 정적으로 조회,
         과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
@@ -78,6 +78,9 @@ class AssignmentCommentView(APIView):
     )
     # 강의 과제 제출
     def post(self, request, assignment_id):
+        if not request.user or not request.user.is_authenticated:
+            return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         # assignment_id를 통해 과제가 존재하는지 확인
         try:
             assignment = Assignment.objects.get(id=assignment_id)
@@ -88,8 +91,13 @@ class AssignmentCommentView(APIView):
         data["assignment"] = assignment.id
         data["user"] = request.user.id
 
+        if data.get("parent"):
+            if not request.user.is_staff:
+                return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = AssignmentCommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({"detail": "과제 제출이 완료 되었습니다."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
