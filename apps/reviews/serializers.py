@@ -5,9 +5,11 @@ from .models import Review
 
 # 후기 등록 및 수업 후기 조회
 class ReviewSerializer(serializers.ModelSerializer):
+    lecture_title = serializers.CharField(source="lecture.title", read_only=True)
+
     class Meta:
         model = Review
-        fields = ["id", "lecture", "student", "student_nickname", "star", "content"]
+        fields = ["id", "lecture", "student", "lecture_title", "student_nickname", "star", "content"]
 
 
 # 내가 작성한 후기 조회
