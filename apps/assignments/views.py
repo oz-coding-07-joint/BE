@@ -1,4 +1,7 @@
-from django.core.cache import cache
+import json
+import redis
+
+from django.core.exceptions import ImproperlyConfigured
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -7,6 +10,14 @@ from rest_framework.views import APIView
 from .models import Assignment, AssignmentComment
 from .serializers import AssignmentCommentSerializer, AssignmentSerializer
 
+
+# Redis 클라이언트 설정
+try:
+    redis_client = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    # 연결 테스트 (옵션)
+    redis_client.ping()
+except redis.RedisError as e:
+    raise ImproperlyConfigured(f"Redis 연결에 실패했습니다: {e}")
 
 class AssignmentView(APIView):
     @extend_schema(
@@ -23,25 +34,24 @@ class AssignmentView(APIView):
         if lecture_chapter_id <= 0:
             return Response({"error": "잘못된 lecture_chapter_id 입니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Redis 캐시를 사용하여 조회 결과를 캐싱
         cache_key = f"assignments_{lecture_chapter_id}"
-        cached_data = cache.get(cache_key)
+        cached_data = redis_client.get(cache_key)
 
         if cached_data:
-            assignments_data = cached_data
+            # Redis에 저장된 JSON 문자열을 파싱하여 Python 객체로 변환
+            assignments_data = json.loads(cached_data)
         else:
-            # 데이터베이스에서 ChapterVideo의 lecture_chapter_id가 lecture_chapter_id와 일치하는 과제들을 조회
+            # ChapterVideo의 lecture_chapter_id가 lecture_chapter_id와 일치하는 과제들을 조회
             assignments = Assignment.objects.filter(chapter_video__lecture_chapter_id=lecture_chapter_id)
             serializer = AssignmentSerializer(assignments, many=True)
             assignments_data = serializer.data
-            # 캐시에 10분 동안 저장 (600초)
-            cache.set(cache_key, assignments_data, 600)
+            # 데이터를 JSON 문자열로 변환 후 Redis에 600초(10분) 동안 저장
+            redis_client.setex(cache_key, 600, json.dumps(assignments_data))
 
         return Response(
             {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data},
             status=status.HTTP_200_OK
         )
-
 
 # -----------------------------------------------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------
