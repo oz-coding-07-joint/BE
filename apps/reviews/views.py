@@ -12,7 +12,7 @@ class ReviewView(APIView):
         summary="수업 후기 조회",
         description=("특정 강의에 대한 후기를 조회합니다."),
         responses={
-            200: ReviewDetailSerializer(many=True),
+            200: ReviewSerializer(many=True),
             404: OpenApiExample("후기 없음", value={"error": "강의 후기를 찾을 수 없습니다"}),
         },
         tags=["Review"],
@@ -21,7 +21,7 @@ class ReviewView(APIView):
     def get(self, request, lecture_id):
         reviews = Review.objects.filter(lecture_id=lecture_id)
         if reviews.exists():
-            serializer = ReviewDetailSerializer(reviews, many=True)
+            serializer = ReviewSerializer(reviews, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({"error": "강의 후기를 찾을 수 없습니다"}, status=status.HTTP_404_NOT_FOUND)
