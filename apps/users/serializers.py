@@ -1,3 +1,4 @@
+import redis
 from django.core.cache import cache
 from django.db import transaction
 from rest_framework import serializers
@@ -6,21 +7,23 @@ from ..terms.models import Terms, TermsAgreement
 from ..terms.serializers import TermsAgreementSerializer
 from .models import User
 from .utils import get_kakao_user_data
-import redis
 
 redis_client = redis.StrictRedis(
     host="localhost",  # 도커에서는 redis의 컨테이너 이름으로 변경해야함
     port=6379,
     db=0,
-    decode_responses=True  # 문자열 반환을 위해 decode_responses=True 설정
+    decode_responses=True,  # 문자열 반환을 위해 decode_responses=True 설정
 )
+
 
 class SendEmailVerificationCodeSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    
+
+
 class VerifyEmailCodeSerializer(serializers.Serializer):
     email = serializers.EmailField()
     code = serializers.CharField()
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
