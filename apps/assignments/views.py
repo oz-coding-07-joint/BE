@@ -4,7 +4,6 @@ import redis
 from django.core.exceptions import ImproperlyConfigured
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -59,7 +58,6 @@ class AssignmentView(APIView):
 
 
 class AssignmentCommentView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
 
     @extend_schema(
         summary="수강생 과제 및 피드백 목록 조회",
