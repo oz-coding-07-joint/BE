@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -22,10 +23,23 @@ class AssignmentView(APIView):
         if lecture_chapter_id <= 0:
             return Response({"error": "잘못된 lecture_chapter_id 입니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        assignments = Assignment.objects.filter(chapter_video_id=lecture_chapter_id)
-        serializer = AssignmentSerializer(assignments, many=True)
+        # Redis 캐시를 사용하여 조회 결과를 캐싱
+        cache_key = f"assignments_{lecture_chapter_id}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            assignments_data = cached_data
+        else:
+            # 데이터베이스에서 ChapterVideo의 lecture_chapter_id가 lecture_chapter_id와 일치하는 과제들을 조회
+            assignments = Assignment.objects.filter(chapter_video__lecture_chapter_id=lecture_chapter_id)
+            serializer = AssignmentSerializer(assignments, many=True)
+            assignments_data = serializer.data
+            # 캐시에 10분 동안 저장 (600초)
+            cache.set(cache_key, assignments_data, 600)
+
         return Response(
-            {"lecture_chapter_id": lecture_chapter_id, "assignments": serializer.data}, status=status.HTTP_200_OK
+            {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data},
+            status=status.HTTP_200_OK
         )
 
 
