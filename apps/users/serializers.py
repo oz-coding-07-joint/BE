@@ -9,7 +9,7 @@ from .models import User
 from .utils import get_kakao_user_data
 
 redis_client = redis.StrictRedis(
-    host="localhost",  # 도커에서는 redis의 컨테이너 이름으로 변경해야함
+    host="redis",  # 도커에서는 redis의 컨테이너 이름, 로컬에서는 localhost
     port=6379,
     db=0,
     decode_responses=True,  # 문자열 반환을 위해 decode_responses=True 설정
