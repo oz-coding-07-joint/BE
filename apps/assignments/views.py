@@ -100,4 +100,3 @@ class AssignmentCommentView(APIView):
             serializer.save()
             return Response({"detail": "과제 제출이 완료 되었습니다."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
