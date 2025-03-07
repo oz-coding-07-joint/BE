@@ -1,6 +1,6 @@
 import json
-import redis
 
+import redis
 from django.core.exceptions import ImproperlyConfigured
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
@@ -10,14 +10,14 @@ from rest_framework.views import APIView
 from .models import Assignment, AssignmentComment
 from .serializers import AssignmentCommentSerializer, AssignmentSerializer
 
-
 # Redis 클라이언트 설정
 try:
-    redis_client = redis.Redis(host='127.0.0.1', port=6379, db=1)
+    redis_client = redis.Redis(host="127.0.0.1", port=6379, db=1)
     # 연결 테스트 (옵션)
     redis_client.ping()
 except redis.RedisError as e:
     raise ImproperlyConfigured(f"Redis 연결에 실패했습니다: {e}")
+
 
 class AssignmentView(APIView):
     @extend_schema(
@@ -49,9 +49,9 @@ class AssignmentView(APIView):
             redis_client.setex(cache_key, 600, json.dumps(assignments_data))
 
         return Response(
-            {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data},
-            status=status.HTTP_200_OK
+            {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data}, status=status.HTTP_200_OK
         )
+
 
 # -----------------------------------------------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------------------------------------
