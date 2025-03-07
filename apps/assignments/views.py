@@ -4,9 +4,9 @@ import redis
 from django.core.exceptions import ImproperlyConfigured
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import Assignment, AssignmentComment
 from .serializers import AssignmentCommentSerializer, AssignmentSerializer
