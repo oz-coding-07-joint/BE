@@ -6,6 +6,7 @@ from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import Assignment, AssignmentComment
 from .serializers import AssignmentCommentSerializer, AssignmentSerializer
@@ -58,6 +59,8 @@ class AssignmentView(APIView):
 
 
 class AssignmentCommentView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
     @extend_schema(
         summary="수강생 과제 및 피드백 목록 조회",
         description="부모가 없는 최상위 댓글만 조회합니다.",
