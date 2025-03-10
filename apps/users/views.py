@@ -4,6 +4,7 @@ import smtplib
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
+from django.db import transaction
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -14,7 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.common.utils import redis_client
 from config.settings.base import EMAIL_HOST_USER
 
-from .models import User
+from .models import Student, User
 from .serializers import (
     ChangePasswordSerializer,
     KakaoLoginSerializer,
@@ -211,12 +212,16 @@ class SignUpView(APIView):
 
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()  # 사용자 생성
+            try:
+                with transaction.atomic():
+                    user = serializer.save()
+                    Student.objects.create(user=user)
 
-            # 회원가입 완료 후 인증 데이터 삭제 (불필요한 Redis의 데이터를 정리)
-            redis_client.delete(RedisKeys.get_verified_email_key(email))
+                    redis_client.delete(RedisKeys.get_verified_email_key(email))
 
-            return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+                return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+            except Exception:
+                return Response({"error": "회원가입 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
