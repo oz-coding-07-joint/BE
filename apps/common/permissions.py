@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission
+
 from apps.registrations.models import Enrollment
+
 
 class IsActiveStudent(BasePermission):
     """

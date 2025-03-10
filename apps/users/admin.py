@@ -5,7 +5,7 @@ from django_softdelete.admin import GlobalObjectsModelAdmin
 
 from apps.common.admin import BaseModelAdmin
 
-from .models import User, Student, Instructor
+from .models import Instructor, Student, User
 
 
 # Register your models here.
@@ -49,7 +49,6 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
-
 
 
 @admin.register(Student)
