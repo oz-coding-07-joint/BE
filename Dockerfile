@@ -33,9 +33,6 @@ COPY poetry.lock /app/poetry.lock
 # Install dependencies
 RUN poetry install --no-root
 
-# staticfiles 디렉토리 권한을 www-data로 설정
-RUN chown -R www-data:www-data /app/staticfiles
-
 # Expose port
 EXPOSE 8000
 
