@@ -48,7 +48,7 @@ DJANGO_APPS = [
 ]
 
 PACKAGE = [
-    # "corsheaders",
+    "corsheaders",
     "drf_spectacular",  # 디버그일 때만 url 추가되도록 할 것
     "rest_framework",
     "rest_framework_simplejwt",
@@ -65,7 +65,7 @@ PACKAGE = [
 INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [
-    # "corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -162,12 +162,21 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-# CORS_ALLOW_ALL_ORIGINS = False
-# CORS_ALLOWED_ORIGINS = []
-# CORS_ALLOW_CREDENTIALS = True
-# CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
-# CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
-#
-# CSRF_TRUSTED_ORIGINS = []
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
+CORS_ALLOW_CREDENTIALS = True  # 쿠키를 포함한 요청 허용
+CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
+CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
+
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
 # CSRF_COOKIE_DOMAIN = ".umdoong.shop"
 # SESSION_COOKIE_DOMAIN = ".umdoong.shop"
+
+# Email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.naver.com"
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")

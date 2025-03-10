@@ -1,6 +1,8 @@
 import os
 import uuid
 
+import redis
+
 
 def generate_unique_filename(filename):
     """UUID + 원본 파일명 + 확장자로 파일명 생성하는 함수"""
@@ -41,3 +43,11 @@ def assignment_comment_file_path(instance, filename):
     folder = "feedbacks" if is_instructor else "submissions"
 
     return f"{base_path}/{folder}/{unique_filename}"
+
+
+redis_client = redis.StrictRedis(
+    host=os.getenv("REDIS_HOST"),  # 도커에서는 redis의 컨테이너 이름, 로컬에서는 localhost
+    port=6379,
+    db=0,
+    decode_responses=True,  # 문자열 반환을 위해 decode_responses=True 설정
+)

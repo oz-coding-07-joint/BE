@@ -1,9 +1,26 @@
-from rest_framework import serializers
+import re
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from rest_framework import serializers, status
+from rest_framework.response import Response
+
+from apps.common.utils import redis_client
 
 from ..terms.models import Terms, TermsAgreement
 from ..terms.serializers import TermsAgreementSerializer
 from .models import User
 from .utils import get_kakao_user_data
+
+
+class SendEmailVerificationCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class VerifyEmailCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -28,38 +45,75 @@ class SignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("email", "password", "name", "nickname", "phone_number", "terms_agreements")
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def validate_email(self, email):
+        # 이메일이 인증되었는지 2차 확인
+        if not redis_client.get(f"verified_email_{email}"):
+            raise serializers.ValidationError("이메일 인증을 먼저 완료해야 합니다.")
+        return email
 
     def validate_terms_agreements(self, value):
-        """필수 약관 동의 여부 검증"""
-        # filter(): 조건에 맞는 쿼리셋을 반환
-        # .all() 을 붙여도 동일한 결과를 내지만 중복된 호출이므로 filter(is_active=True) 만 사용
-        # 데이터를 집합 자료형으로 변환 / 중복을 제거하고 수학적 집합 연산을 효율적으로 수행할 수 있어서 존재 여부를 빠르게 확인 가능
+        # value 예시
+        # value = [
+        #     {"terms": 1, "is_active": True},
+        #     {"terms": 2, "is_active": False},
+        #     {"terms": 3, "is_active": True}
+        # ]
+
+        # flat=True를 사용해서 id를 리스트로 반환 / ex -> <QuerySet [1, 2]> (1개의 필드에만 사용 가능)
+        # 사용하지 않으면 튜플 / ex -> <QuerySet [(1,), (2,)]>
+        # 집합 변환 시 예를 들어보면 {1, 2, 3}, {(1,), (2,), (3,)}의 차이를 보임
+        # -> 튜플로 집합을 만들면 뒤에서 사용할 if문에서 사칙연산에 어려움이 생김
         required_terms = set(Terms.objects.filter(is_required=True, is_active=True).values_list("id", flat=True))
-        agreed_terms = set()
 
-        for item in value:
-            if item.get("is_active"):
-                term_obj = item.get("terms")
-                # 만약 term_obj 가 Terms 인스턴스라면 id 를 추출, 아니면 그대로 사용
-                agreed_terms.add(term_obj.id if hasattr(term_obj, "id") else term_obj)
+        # is_active가 true일 경우 value를 item에 1개씩 담아준다
+        # item["terms"]가 Terms모델의 인스턴스이면 id를 가져오고 이미 id라면 그대로 사용
+        agreed_terms = {
+            item["terms"].id if isinstance(item["terms"], Terms) else item["terms"]
+            for item in value
+            if bool(item.get("is_agree"))
+        }
 
+        # 필수 약관에서 동의한 약관을 빼면 동의하지 않은 필수 약관이 남는다
         if required_terms - agreed_terms:
             raise serializers.ValidationError("회원가입을 위해서는 모든 필수 약관에 동의해야 합니다.")
 
         return value
 
     def create(self, validated_data):
-        """User 생성 및 약관 동의 정보 저장"""
-        terms_data = validated_data.pop("terms_agreements", [])  # 기본값 [] (KeyError 방지)
+        """
+        비밀번호 해쉬화 및 terms_agreements를 생성하는 함수
+        """
+        terms_data = validated_data.pop("terms_agreements")
         password = validated_data.pop("password", None)
 
-        user = User(**validated_data)
-        if password:
-            user.set_password(password)
-        user.save()
+        if not re.search(r"[a-zA-Z]", password) or not re.search(r"[!@#$%^&*()]", password):
+            return Response(
+                {"detail": "비밀번호는 영문, 숫자, 특수문자[!@#$%^&*()]를 포함한 8자 이상이어야 합니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        for term in terms_data:
-            TermsAgreement.objects.create(user=user, **term)
+        try:
+            validate_password(password)  # 장고의 비밀번호 유효성 검사
+        except ValidationError as e:
+            return Response(
+                {"detail": f"비밀번호는 영문, 숫자, 특수문자[!@#$%^&*()]를 포함한 8자 이상이어야 합니다.{e}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 약관동의 없이 회원가입 될 가능성이 있으니 트랜젝션 처리
+        with transaction.atomic():
+            user = User(**validated_data)
+
+            if password:  # 비밀번호 해쉬화
+                user.set_password(password)
+            user.save()
+
+            terms_agreements = [TermsAgreement(user=user, **terms) for terms in terms_data]
+
+            # bulk_create는 여러 개의 데이터를 한 번에 insert해준다
+            TermsAgreement.objects.bulk_create(terms_agreements)
 
         return user
 
