@@ -11,27 +11,32 @@ class EnrollmentRegistrationView(APIView):
     @extend_schema(
         summary="수강 신청",
         description="학생이 강의를 신청하는 API입니다.",
-        request=EnrollmentSerializer,
         responses={
             201: OpenApiExample("성공 예시", value={"detail": "수강 신청 완료"}),
             400: OpenApiExample("오류 예시", value={"detail": "student_id is required"}),
+            403: OpenApiExample("오류 예시", value={"detail": "학생만 수강 신청할 수 있습니다"}),
         },
         tags=["Enrollment"],
     )
 
     # 수강 신청
     def post(self, request, course_id):
-        # 요청 데이터에서 student_id 추출
-        student_id = request.data.get("student_id")
-        if not student_id:
-            return Response({"detail": "student_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        # 요청 데이터에서 student_id 대신, 로그인한 사용자의 Student 인스턴스를 사용
+        if not request.user or not request.user.is_authenticated:
+            return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ForeignKey를 사용하므로 역참조 기본 이름은 student_set
+        if not request.user.student_set.exists():
+            return Response({"detail": "학생만 수강 신청할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        student = request.user.student_set.first()
 
         # 이미 해당 학생이 해당 강의에 등록되어 있는지 확인
-        if Enrollment.objects.filter(student_id=student_id, course_id=course_id).exists():
+        if Enrollment.objects.filter(student=student, course=course_id).exists():
             return Response({"detail": "이미 수강 신청을 하셨습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = {
-            "student": student_id,
+            "student": student.pk,
             "course": course_id,
             "is_active": False,  # 수강 신청 후 관리자가 승인하면 True로 처리
         }
@@ -60,14 +65,15 @@ class EnrollmentInProgressView(APIView):
     )
     # 수강중인 수업 조회
     def get(self, request):
-        """
-        승인 대기, 취소된 등을 가져올 수 있으므로
-        현재 수강 중인 수업만 조회하려면 필요
-        """
         if not request.user or not request.user.is_authenticated:
-            return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        enrollments = Enrollment.objects.filter(is_active=True, student=request.user)
+        # 학생 정보가 ForeignKey로 연결되어 있으므로, 역참조(student_set)를 사용
+        if not request.user.student_set.exists():
+            return Response({"detail": "학생 정보가 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        student = request.user.student_set.first()
+        enrollments = Enrollment.objects.filter(is_active=True, student=student)
         if not enrollments.exists():
             return Response({"detail": "수강 중인 클래스가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
