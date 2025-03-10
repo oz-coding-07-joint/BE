@@ -64,7 +64,7 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(", ".join(e.messages))
 
         return password
-    
+
     def validate_phone_number(self, phone_number):
         """휴대폰 번호가 숫자인지 확인"""
         if not phone_number.isdigit():
