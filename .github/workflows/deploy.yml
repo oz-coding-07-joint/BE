@@ -31,12 +31,17 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
           docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
 
+      - name: Setup SSH Key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id-rsa
+          chmod 600 ~/.shh/id_rsa
+
       - name: Deploy to Server NCP
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key_path: ~/.ssh/id_rsa
           script: |
             cd app
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
