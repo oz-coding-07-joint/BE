@@ -64,7 +64,10 @@ class EnrollmentInProgressView(APIView):
         승인 대기, 취소된 등을 가져올 수 있으므로
         현재 수강 중인 수업만 조회하려면 필요
         """
-        enrollments = Enrollment.objects.filter(is_active=True)
+        if not request.user or not request.user.is_authenticated:
+            return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        enrollments = Enrollment.objects.filter(is_active=True, student=request.user)
         if not enrollments.exists():
             return Response({"detail": "수강 중인 클래스가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
