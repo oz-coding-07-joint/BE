@@ -69,8 +69,16 @@ class AssignmentCommentView(APIView):
         if not request.user or not request.user.is_authenticated:
             return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        comments = AssignmentComment.objects.filter(parent__isnull=True, user=request.user)
-        serializer = AssignmentCommentSerializer(comments, many=True)
+        if request.user.is_staff:
+            # 강사는 해당 과제에 속한 모든 최상위 댓글을 조회
+            comments = AssignmentComment.objects.filter(parent__isnull=True, assignment=assignment_id)
+        else:
+            # 학생은 본인이 작성한 최상위 댓글만 조회
+            comments = AssignmentComment.objects.filter(
+                parent__isnull=True, assignment=assignment_id, user=request.user
+            )
+
+        serializer = AssignmentCommentSerializer(comments, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
