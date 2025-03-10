@@ -31,27 +31,8 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
           docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
 
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ls -lah ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-      - name: Debug SSH Key (Safe)
-        run: |
-          ls -lah ~/.ssh
-          [ -f ~/.ssh/id_rsa ] && echo "SSH key exists" || echo "SSH key is missing"
-          [ $(stat -c "%a" ~/.ssh/id_rsa) == "600" ] && echo "Permission is correct" || echo "Fixing permission"
-          chmod 600 ~/.ssh/id_rsa
-
-      - name: Test SSH Connection (Safe)
-        run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -T ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo Connection Successful" >/dev/null 2>&1 || echo "SSH connection failed"
-
       - name: Deploy to Server NCP
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
