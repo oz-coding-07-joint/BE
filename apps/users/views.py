@@ -216,7 +216,7 @@ class SignUpView(APIView):
                 with transaction.atomic():
                     user = serializer.save()
                     Student.objects.create(user=user)
-
+                    user.refresh_from_db()
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
                 return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
