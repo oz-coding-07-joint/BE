@@ -166,7 +166,7 @@ class VerifyEmailCodeView(APIView):
             return Response({"error": "잘못된 인증 코드입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 이메일 인증 완료 여부 저장 / [verified_email_key]가 저장되는 부분
-        redis_client.setex(RedisKeys.get_verified_email_key(email), 30000, "true")
+        redis_client.setex(RedisKeys.get_verified_email_key(email), 300, "true")
 
         # 사용된 인증코드는 삭제
         redis_client.delete(RedisKeys.get_email_verification_key(email))
