@@ -41,5 +41,5 @@ jobs:
             cd app
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
-            docker-compose --env-file .envs/.dev.env up -d -build
+            docker-compose --env-file .envs/.dev.env up -d --build
             docker ps
