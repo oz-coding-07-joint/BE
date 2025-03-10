@@ -353,7 +353,26 @@ class WithdrawalView(APIView):
 
     @extend_schema(summary="회원탈퇴", description="유저를 soft delete로 관리하는 회원탈퇴 API입니다", tags=["User"])
     def post(self, request):
-        return
+        # 쿠키에서 refresh token 추출
+        refresh_token = request.COOKIES.get("refresh_token")
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception:
+                return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # soft delete 처리 (탈퇴 상태로 저장)
+        user = request.user
+        user.delete()
+
+        # refresh token 삭제 후 응답 반환
+        response = Response(
+            {"detail": "회원 탈퇴가 완료되었습니다. 같은 이메일로 재가입해도 데이터는 남아있지 않습니다."},
+            status=status.HTTP_200_OK,
+        )
+        response.delete_cookie("refresh_token")
+        return response
 
 
 class MyinfoView(APIView):
