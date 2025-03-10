@@ -3,8 +3,7 @@ import re
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from rest_framework import serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers
 
 from apps.common.utils import redis_client
 
@@ -53,6 +52,19 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("이메일 인증을 먼저 완료해야 합니다.")
         return email
 
+    def validate_password(self, password):
+        if not re.search(r"[a-zA-Z]", password) or not re.search(r"[!@#$%^&*()]", password):
+            raise serializers.ValidationError(
+                "비밀번호는 8자 이상의 영문, 숫자, 특수문자[!@#$%^&*()]를 포함해야 합니다."
+            )
+
+        try:
+            validate_password(password)  # 장고의 비밀번호 유효성 검사
+        except ValidationError as e:
+            raise serializers.ValidationError(", ".join(e.messages))
+
+        return password
+
     def validate_terms_agreements(self, value):
         # value 예시
         # value = [
@@ -87,20 +99,6 @@ class SignupSerializer(serializers.ModelSerializer):
         """
         terms_data = validated_data.pop("terms_agreements")
         password = validated_data.pop("password", None)
-
-        if not re.search(r"[a-zA-Z]", password) or not re.search(r"[!@#$%^&*()]", password):
-            return Response(
-                {"detail": "비밀번호는 영문, 숫자, 특수문자[!@#$%^&*()]를 포함한 8자 이상이어야 합니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            validate_password(password)  # 장고의 비밀번호 유효성 검사
-        except ValidationError as e:
-            return Response(
-                {"detail": f"비밀번호는 영문, 숫자, 특수문자[!@#$%^&*()]를 포함한 8자 이상이어야 합니다.{e}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
         # 약관동의 없이 회원가입 될 가능성이 있으니 트랜젝션 처리
         with transaction.atomic():
