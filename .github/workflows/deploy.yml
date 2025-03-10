@@ -38,6 +38,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            docker image prune -a --filter "until=24h"
             cd app
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
