@@ -1,4 +1,5 @@
 import random
+import smtplib
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -118,9 +119,10 @@ class SendEmailVerificationCodeView(APIView):
                 recipient_list=[email],
                 fail_silently=False,
             )
+        except smtplib.SMTPAuthenticationError:
+            return Response({"detail": "SMTP 인증 오류: 이메일과 비밀번호를 확인하세요."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception:
-            # 이메일 전송 실패 시 처리
-            return Response({"detail": "이메일 전송에 실패했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "예상치 못한 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(
             {"message": "인증 코드가 이메일로 전송되었습니다. 5분 이내에 확인해주세요."}, status=status.HTTP_200_OK
