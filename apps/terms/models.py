@@ -1,8 +1,9 @@
 from django.db import models
+from django_softdelete.models import SoftDeleteModel
 
 from apps.common.models import BaseModel
 from apps.users.models import User
-from django_softdelete.models import SoftDeleteModel
+
 
 # 약관 정보를 저장하는 모델
 class Terms(BaseModel):
