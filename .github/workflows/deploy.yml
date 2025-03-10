@@ -34,7 +34,9 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
+          ls -la ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id-rsa
+          ls -la ~/.ssh
           chmod 600 ~/.ssh/id_rsa
 
       - name: Deploy to Server NCP
