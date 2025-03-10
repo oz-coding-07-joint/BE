@@ -1,6 +1,5 @@
 import random
 
-import redis
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
@@ -11,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.common.utils import redis_client
 from config.settings.base import EMAIL_HOST_USER
 
 from .models import User
@@ -24,13 +24,6 @@ from .serializers import (
     UpdateMyPageSerializer,
     UserSerializer,
     VerifyEmailCodeSerializer,
-)
-
-redis_client = redis.StrictRedis(
-    host="redis",  # 도커에서는 redis의 컨테이너 이름, 로컬에서는 localhost
-    port=6379,
-    db=0,
-    decode_responses=True,  # 문자열 반환을 위해 decode_responses=True 설정
 )
 
 
@@ -73,6 +66,9 @@ class SendEmailVerificationCodeView(APIView):
     def post(self, request):
         email = request.data.get("email")
 
+        if User.objects.filter(email=email, deleted_at__isnull=True).exists():
+            return Response({"detail": "이미 존재하는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         # 이미 인증된 이메일인지 확인
         if redis_client.get(RedisKeys.get_verified_email_key(email)):
             return Response({"error": "이미 인증이 완료된 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -89,14 +85,14 @@ class SendEmailVerificationCodeView(APIView):
         # 기존 인증 코드가 있는지 확인
         existing_code = redis_client.get(RedisKeys.get_email_verification_key(email))
 
-        # 기존 코드가 없거나, 만료된 경우
+        # 기존 코드가 이미 있거나 만료되지 않은 경우
         if existing_code or not redis_client.ttl(RedisKeys.get_email_verification_key(email)) <= 0:
             return Response(
-                {"message": "인증 코드가 이미 발송되었습니다. 기존 코드를 사용하세요."},
+                {"message": "인증 코드가 이미 존재합니다. 기존 코드를 사용하세요."},
                 status=status.HTTP_200_OK,
             )
 
-        # 인증 코드가 없거나 TTL이 만료된 경우, 기존 코드를 삭제하고 새로 생성
+        # 기존 코드가 캐시되어 있다면 삭제하는 로직(혹시 모르니까)
         redis_client.delete(RedisKeys.get_email_verification_key(email))
 
         # 6자리 랜덤 인증 코드 생성
@@ -152,19 +148,27 @@ class VerifyEmailCodeView(APIView):
         # 저장된 인증 코드 가져오기
         stored_code = redis_client.get(RedisKeys.get_email_verification_key(email))
 
+        # Redis에서 가져온 데이터가 None일 경우
         if stored_code is None:
-            return Response({"error": "인증코드를 다시 발급받으세요."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "error": "이미 이메일 인증에 성공하여 인증코드가 삭제된 상태입니다. 회원가입이 안되신다면 5분 후 다시 시도해주세요."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Redis에서 가져온 데이터가 bytes일 경우 decode 처리
         if isinstance(stored_code, bytes):
             stored_code = stored_code.decode()
 
+        # Redis의 코드와 입력코드가 다른 경우
         if stored_code != input_code:
             return Response({"error": "잘못된 인증 코드입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 이메일 인증 완료 여부 저장 / [verified_email_key]가 저장되는 부분
-        redis_client.setex(RedisKeys.get_verified_email_key(email), 3600, "true")
+        redis_client.setex(RedisKeys.get_verified_email_key(email), 30000, "true")
 
+        # 사용된 인증코드는 삭제
         redis_client.delete(RedisKeys.get_email_verification_key(email))
 
         return Response({"message": "이메일 인증이 완료되었습니다!"}, status=status.HTTP_200_OK)
@@ -183,11 +187,20 @@ class SignUpView(APIView):
     )
     def post(self, request):
         email = request.data.get("email")
+
+        if User.objects.filter(email=email, deleted_at__isnull=True).exists():
+            return Response({"detail": "이미 존재하는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         # 이메일 인증 여부 확인
         is_verified = redis_client.get(RedisKeys.get_verified_email_key(email))
 
         if is_verified is None:
             return Response({"error": "이메일 인증이 완료되지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 소프트 삭제된 유저인 경우 db 완전 삭제 후 다시 계정 생성
+        if User.deleted_objects.filter(email=email).exists():
+            deleted_user = User.deleted_objects.filter(email=email).first()
+            deleted_user.hard_delete()
 
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
@@ -325,7 +338,6 @@ class LogoutView(APIView):
             token = RefreshToken(refresh_token)
             token.blacklist()  # 로그아웃 시 refresh token을 블랙리스트에 등록
 
-            print("블랙리스트에 등록된 Access Token:", token.access_token)
         except Exception:
             return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
 
