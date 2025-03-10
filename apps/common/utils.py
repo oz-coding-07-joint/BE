@@ -20,12 +20,24 @@ def class_lecture_file_path(instance, filename):
 
 
 def assignment_material_path(instance, filename):
-    """과제 자료 저장 경로"""
-    if not instance.assignment or not instance.assignment.pk:
+    """과제 자료 저장 경로 생성 함수"""
+    if hasattr(instance, "assignment"):
+        assignment_obj = instance.assignment
+    else:
+        assignment_obj = instance
+
+    if not assignment_obj.pk:
         raise ValueError("Assignment 정보가 없어서 파일 경로를 생성할 수 없습니다.")
 
     unique_filename = generate_unique_filename(filename)
-    return f"classes/{instance.assignment.lecture.class_id}/assignments/{instance.assignment.pk}/assignment_materials/{unique_filename}"
+
+    try:
+        # Lecture 정보를 통해 강의(클래스) 식별자(course_id)를 가져옵니다.
+        course_id = assignment_obj.chapter_video.lecture_chapter.lecture.course_id
+    except AttributeError:
+        course_id = "default"
+
+    return f"classes/{course_id}/assignments/{assignment_obj.pk}/assignment_materials/{unique_filename}"
 
 
 def assignment_comment_file_path(instance, filename):
@@ -39,7 +51,7 @@ def assignment_comment_file_path(instance, filename):
     is_instructor = getattr(instance.user, "instructor", None) is not None
 
     # 파일 저장 경로 설정
-    base_path = f"classes/{instance.assignment.lecture.class_id}/assignments/{instance.assignment.pk}"
+    base_path = f"classes/{instance.assignment.chapter_video.lecture_chapter.lecture.course_id}/assignments/{instance.assignment.pk}"
     folder = "feedbacks" if is_instructor else "submissions"
 
     return f"{base_path}/{folder}/{unique_filename}"
