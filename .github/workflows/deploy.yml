@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ls -la ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id-rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 --decode > ~/.ssh/id_rsa
           ls -la ~/.ssh
           chmod 600 ~/.ssh/id_rsa
 
