@@ -5,7 +5,7 @@ from django_softdelete.admin import GlobalObjectsModelAdmin
 
 from apps.common.admin import BaseModelAdmin
 
-from .models import User
+from .models import Instructor, Student, User
 
 
 # Register your models here.
@@ -49,3 +49,35 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
+
+
+@admin.register(Student)
+class StudentAdmin(BaseModelAdmin):
+    list_display = ("get_user_email", "get_user_name", "created_at", "updated_at")
+    search_fields = ("user__email", "user__name")
+    list_filter = ("created_at", "updated_at")
+
+    def get_user_email(self, obj):
+        return obj.user.email
+
+    def get_user_name(self, obj):
+        return obj.user.name
+
+    get_user_email.short_description = "Email"
+    get_user_name.short_description = "Name"
+
+
+@admin.register(Instructor)
+class InstructorAdmin(BaseModelAdmin):
+    list_display = ("get_user_email", "get_user_name", "experience", "created_at", "updated_at")
+    search_fields = ("user__email", "user__name", "experience")
+    list_filter = ("created_at", "updated_at")
+
+    def get_user_email(self, obj):
+        return obj.user.email
+
+    def get_user_name(self, obj):
+        return obj.user.name
+
+    get_user_email.short_description = "Email"
+    get_user_name.short_description = "Name"
