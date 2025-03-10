@@ -65,6 +65,16 @@ class SignupSerializer(serializers.ModelSerializer):
 
         return password
 
+    def validate_phone_number(self, phone_number):
+        """휴대폰 번호가 숫자인지 확인"""
+        if not phone_number.isdigit():
+            raise serializers.ValidationError("휴대폰 번호는 숫자만 입력해야 합니다.")
+
+        if User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError("이미 등록된 휴대폰 번호입니다.")
+
+        return phone_number
+
     def validate_terms_agreements(self, value):
         # value 예시
         # value = [
