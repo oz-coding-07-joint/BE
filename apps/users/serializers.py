@@ -54,13 +54,15 @@ class SignupSerializer(serializers.ModelSerializer):
 
     def validate_password(self, password):
         if not re.search(r"[a-zA-Z]", password) or not re.search(r"[!@#$%^&*()]", password):
-            raise serializers.ValidationError("비밀번호는 8자 이상의 영문, 숫자, 특수문자[!@#$%^&*()]를 포함해야 합니다.")
+            raise serializers.ValidationError(
+                "비밀번호는 8자 이상의 영문, 숫자, 특수문자[!@#$%^&*()]를 포함해야 합니다."
+            )
 
         try:
             validate_password(password)  # 장고의 비밀번호 유효성 검사
         except ValidationError as e:
             raise serializers.ValidationError(", ".join(e.messages))
-        
+
         return password
 
     def validate_terms_agreements(self, value):

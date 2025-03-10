@@ -120,9 +120,14 @@ class SendEmailVerificationCodeView(APIView):
                 fail_silently=False,
             )
         except smtplib.SMTPAuthenticationError:
-            return Response({"detail": "SMTP 인증 오류: 이메일과 비밀번호를 확인하세요."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"detail": "SMTP 인증 오류: 이메일과 비밀번호를 확인하세요."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         except Exception:
-            return Response({"detail": "예상치 못한 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"detail": "예상치 못한 오류가 발생했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response(
             {"message": "인증 코드가 이메일로 전송되었습니다. 5분 이내에 확인해주세요."}, status=status.HTTP_200_OK
