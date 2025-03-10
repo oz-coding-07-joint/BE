@@ -47,15 +47,20 @@ class ReviewView(APIView):
         except Lecture.DoesNotExist:
             return Response({"detail": "해당 강의를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 해당 강의의 수강중인 학생인지 확인 (Enrollment에서 is_active=True)
-        if not Enrollment.objects.filter(student=request.user, course=lecture.course, is_active=True).exists():
+        # 로그인한 사용자의 Student 인스턴스 가져오기 (ForeignKey 사용 시 역참조: student_set)
+        if not request.user.student_set.exists():
+            return Response({"detail": "학생만 후기를 등록할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+        student = request.user.student_set.first()
+
+        # 해당 강의를 수강 중인 학생인지 확인 (Enrollment에서 is_active=True)
+        if not Enrollment.objects.filter(student=student, course=lecture.course, is_active=True).exists():
             return Response(
                 {"detail": "해당 강의를 수강 중인 학생만 후기를 등록할 수 있습니다."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # 이미 후기를 작성한 경우, 한 강의당 한 번만 작성 가능하도록 체크
-        if Review.objects.filter(lecture=lecture, student=request.user).exists():
+        # 한 강의당 한 번만 후기를 작성할 수 있도록 체크
+        if Review.objects.filter(lecture=lecture, student=student).exists():
             return Response(
                 {"detail": "한 강의당 한 번만 후기를 작성할 수 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -63,7 +68,7 @@ class ReviewView(APIView):
 
         data = request.data.copy()
         data["lecture"] = lecture_id
-        data["student"] = request.user.id
+        data["student"] = student.pk
 
         serializer = ReviewSerializer(data=data)
         if serializer.is_valid():
@@ -85,8 +90,14 @@ class MyReviewListView(APIView):
     )
     # 내가 작성한 후기 조회
     def get(self, request):
-        # 인증된 사용자의 리뷰만 필터링 (User 모델과 연결된 student 필드 기준)
-        reviews = Review.objects.filter(student=request.user)
+        if not request.user or not request.user.is_authenticated:
+            return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not request.user.student_set.exists():
+            return Response({"detail": "학생 정보가 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        student = request.user.student_set.first()
+
+        reviews = Review.objects.filter(student=student)
         if reviews.exists():
             serializer = ReviewDetailSerializer(reviews, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
