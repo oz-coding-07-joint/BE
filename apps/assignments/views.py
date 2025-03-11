@@ -8,7 +8,11 @@ from rest_framework.views import APIView
 from apps.common.utils import redis_client
 
 from .models import Assignment, AssignmentComment
-from .serializers import AssignmentCommentSerializer, AssignmentSerializer, AssignmentCommentCreateSerializer
+from .serializers import (
+    AssignmentCommentCreateSerializer,
+    AssignmentCommentSerializer,
+    AssignmentSerializer,
+)
 
 
 class AssignmentView(APIView):
