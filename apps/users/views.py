@@ -264,7 +264,7 @@ class LoginView(APIView):
             "refresh_token",  # 쿠키 이름
             value=str(refresh),  # 쿠키 값
             httponly=True,  # JavaScript에서 쿠키 접근을 막음
-            secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # HTTPS 환경에서만 쿠키를 전송(dev, prod로 관리)
+            secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # HTTPS 환경에서만 쿠키를 전송(dev[F], prod[T]로 관리)
             samesite="Lax",  # CSRF 공격 방지
             max_age=3 * 60 * 60,  # 쿠키 만료 시간 3시간
         )
