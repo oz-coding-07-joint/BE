@@ -8,7 +8,11 @@ from rest_framework.views import APIView
 from apps.common.utils import redis_client
 
 from .models import Assignment, AssignmentComment
-from .serializers import AssignmentCommentSerializer, AssignmentSerializer
+from .serializers import (
+    AssignmentCommentCreateSerializer,
+    AssignmentCommentSerializer,
+    AssignmentSerializer,
+)
 
 
 class AssignmentView(APIView):
@@ -84,7 +88,7 @@ class AssignmentCommentView(APIView):
     @extend_schema(
         summary="강의 과제 제출",
         description="assignment_id를 통해 과제가 존재하는지 확인하고, 과제 제출을 처리합니다.",
-        request=AssignmentCommentSerializer,
+        request=AssignmentCommentCreateSerializer,
         responses={
             201: OpenApiExample(
                 "성공 예시",
@@ -112,15 +116,17 @@ class AssignmentCommentView(APIView):
         except Assignment.DoesNotExist:
             return Response({"detail": "해당 과제를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
+        # 대댓글 작성은 강사가 아니면 불허
+        if request.data.get("parent") and not request.user.is_staff:
+            return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        # 클라이언트는 content와 file_url만 전송하도록 하고,
+        # assignment와 user 정보는 context로 전달합니다.
         data = request.data.copy()
-        data["assignment"] = assignment.id
-        data["user"] = request.user.id
 
-        if data.get("parent"):
-            if not request.user.is_staff:
-                return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
-
-        serializer = AssignmentCommentSerializer(data=data)
+        serializer = AssignmentCommentCreateSerializer(
+            data=data, context={"assignment": assignment, "user": request.user}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response({"detail": "과제 제출이 완료 되었습니다."}, status=status.HTTP_201_CREATED)
