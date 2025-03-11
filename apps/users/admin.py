@@ -45,7 +45,7 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
             if not obj.is_superuser and User.objects.filter(is_superuser=True).count() == 1:
                 raise ValidationError("최소 1명의 superuser는 있어야 합니다.")
 
-        if obj.password:
+        if "password" in form.changed_data:
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)

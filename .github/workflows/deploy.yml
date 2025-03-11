@@ -3,10 +3,12 @@ name: Deploy
 on:
   push:
     branches:
-      - main
+      - develop
   pull_request:
     branches:
-      - main
+      - develop
+    types:
+      - closed
 
 
 jobs:
@@ -17,6 +19,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Check if PR was merged
+        if: github.event.pull_request.merged == true
+        run: |
+          echo "PR was merged. Proceeding with deployment."
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -32,13 +39,15 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
 
       - name: Deploy to Server NCP
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            docker image prune -a --filter "until=24h"
             cd app
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
-            docker-compose --env-file .envs/.dev.env up -d -build
+            docker-compose --env-file .envs/.dev.env up -d --build
+            docker ps
