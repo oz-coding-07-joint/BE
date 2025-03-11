@@ -7,16 +7,40 @@ import redis
 def generate_unique_filename(filename):
     """UUID + 원본 파일명 + 확장자로 파일명 생성하는 함수"""
     name, ext = os.path.splitext(filename)  # 파일명과 확장자 분리
-    return f"{uuid.uuid4()}_{name}{ext}"  # UUID + 원본 파일명 + 확장자
+    return f"{name}_{uuid.uuid4()}{ext}"  # UUID + 원본 파일명 + 확장자
 
 
 def class_lecture_file_path(instance, filename):
-    """학습자료 및 강의영상 저장 경로"""
-    if not instance.lecture or not instance.lecture.class_id:
-        raise ValueError("Lecture 정보가 없어서 파일 경로를 생성할 수 없습니다.")
+    """썸네일, 학습자료, 강의영상 파일을 동일한 경로에 저장"""
+
+    from apps.courses.models import Lecture, LectureChapter, ChapterVideo
 
     unique_filename = generate_unique_filename(filename)
-    return f"classes/{instance.lecture.class_id}/lectures/{instance.lecture.id}/{unique_filename}"
+
+    # Lecture 모델 (썸네일 저장)
+    if isinstance(instance, Lecture):
+        file_type = "thumbnails"
+        course_id = instance.course.id
+        lecture_id = instance.id
+
+    # LectureChapter 모델 (학습자료 저장)
+    elif isinstance(instance, LectureChapter):
+        file_type = "materials"
+        course_id = instance.lecture.course.id
+        lecture_id = instance.lecture.id
+
+    # ChapterVideo 모델 (강의 영상 저장)
+    elif isinstance(instance, ChapterVideo):
+        file_type = "videos"
+        course_id = instance.lecture_chapter.lecture.course.id
+        lecture_id = instance.lecture_chapter.lecture.id
+
+    else:
+        raise ValueError(f"지원되지 않는 모델 유형입니다: {type(instance).__name__}")
+
+    # ✅ 올바른 경로 반환
+    return f"classes/{course_id}/lectures/{lecture_id}/{file_type}_{unique_filename}"
+
 
 
 def assignment_material_path(instance, filename):
