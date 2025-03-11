@@ -60,7 +60,6 @@ PACKAGE = [
     "apps.assignments.apps.AssignmentsConfig",
     "apps.registrations.apps.RegistrationsConfig",
     "apps.reviews.apps.ReviewsConfig",
-
 ]
 
 

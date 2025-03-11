@@ -13,7 +13,7 @@ def generate_unique_filename(filename):
 def class_lecture_file_path(instance, filename):
     """썸네일, 학습자료, 강의영상 파일을 동일한 경로에 저장"""
 
-    from apps.courses.models import Lecture, LectureChapter, ChapterVideo
+    from apps.courses.models import ChapterVideo, Lecture, LectureChapter
 
     unique_filename = generate_unique_filename(filename)
 
@@ -40,7 +40,6 @@ def class_lecture_file_path(instance, filename):
 
     # ✅ 올바른 경로 반환
     return f"classes/{course_id}/lectures/{lecture_id}/{file_type}_{unique_filename}"
-
 
 
 def assignment_material_path(instance, filename):
