@@ -1,7 +1,9 @@
 from drf_spectacular.utils import OpenApiExample, extend_schema
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from apps.courses.models import Lecture
 from apps.registrations.models import Enrollment
@@ -11,6 +13,19 @@ from .serializers import ReviewDetailSerializer, ReviewSerializer
 
 
 class ReviewView(APIView):
+
+    def get_authenticators(self):
+        if not hasattr(self, "request") or self.request is None:
+            return super().get_authenticators()
+        if self.request.method == "GET":
+            return []  # GET 요청은 인증하지 않음
+        return [JWTAuthentication()]
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]  # GET 요청은 모든 사용자 허용
+        return super().get_permissions()
+
     @extend_schema(
         summary="수업 후기 조회",
         description=("특정 강의에 대한 후기를 조회합니다."),
