@@ -49,6 +49,7 @@ DJANGO_APPS = [
 
 PACKAGE = [
     "corsheaders",
+    "storages",
     "drf_spectacular",  # 디버그일 때만 url 추가되도록 할 것
     "rest_framework",
     "rest_framework_simplejwt",
@@ -180,3 +181,22 @@ EMAIL_USE_SSL = False
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
+# NCP Object Storage 설정
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+AWS_ACCESS_KEY_ID = os.getenv("NCP_ACCESS_KEY_ID")  # NCP 액세스 키
+AWS_SECRET_ACCESS_KEY = os.getenv("NCP_SECRET_ACCESS_KEY")  # NCP 시크릿 키
+AWS_STORAGE_BUCKET_NAME = os.getenv("NCP_BUCKET_NAME")  # 버킷 이름
+AWS_S3_ENDPOINT_URL = "https://kr.object.ncloudstorage.com"  # NCP Object Storage 엔드포인트
+AWS_S3_REGION_NAME = "kr-standard"
+AWS_S3_DEFAULT_ACL = "public-read"
+MEDIA_URL = f"https://{os.getenv('NCP_BUCKET_NAME')}.kr.object.ncloudstorage.com/"
