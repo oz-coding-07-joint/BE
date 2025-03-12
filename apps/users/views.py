@@ -215,6 +215,7 @@ class SignUpView(APIView):
             try:
                 with transaction.atomic():
                     user = serializer.save()
+                    user.refresh_from_db()  # db에 바로 적용이 안되어 id가 orm으로 안 가져와질 수 있으므로 refresh
                     Student.objects.create(user=user)
                     user.refresh_from_db()
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
@@ -259,14 +260,22 @@ class LoginView(APIView):
         user_data = User.objects.get(email=email)
         serializer = UserSerializer(user_data)
 
-        response = Response({"access": access_token, "user": serializer.data}, status=status.HTTP_200_OK)
+        response = Response({"user": serializer.data}, status=status.HTTP_200_OK)
         response.set_cookie(
             "refresh_token",  # 쿠키 이름
             value=str(refresh),  # 쿠키 값
             httponly=True,  # JavaScript에서 쿠키 접근을 막음
             secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # HTTPS 환경에서만 쿠키를 전송(dev[F], prod[T]로 관리)
             samesite="Lax",  # CSRF 공격 방지
-            max_age=3 * 60 * 60,  # 쿠키 만료 시간 3시간
+            max_age=5 * 60 * 60,  # 쿠키 만료 시간 5시간
+        )
+        response.set_cookie(
+            "access_token",
+            value=str(access_token),
+            httponly=True,
+            secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
+            samesite="Lax",
+            max_age=15 * 60,  # 15분
         )
         return response
 
@@ -298,7 +307,7 @@ class TokenRefreshView(APIView):
             new_access_token = str(new_refresh.access_token)
 
             # body 에 access token 만 포함한 응답 생성
-            response = Response({"access_token": new_access_token}, status=status.HTTP_200_OK)
+            response = Response({"detail": "토큰 재발급 완료"}, status=status.HTTP_200_OK)
 
             # 새 refresh token 을 쿠키에 설정
             response.set_cookie(
@@ -307,7 +316,15 @@ class TokenRefreshView(APIView):
                 httponly=True,
                 secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
                 samesite="Lax",
-                max_age=3 * 60 * 60,
+                max_age=5 * 60 * 60,
+            )
+            response.set_cookie(
+                key="access_token",
+                value=str(new_access_token),
+                httponly=True,
+                secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
+                samesite="Lax",
+                max_age=15 * 60,
             )
             return response
         except Exception:
