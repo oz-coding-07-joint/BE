@@ -49,6 +49,11 @@ DJANGO_APPS = [
 
 PACKAGE = [
     "corsheaders",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.kakao",
+    "django.contrib.sites",
     "storages",
     "drf_spectacular",  # 디버그일 때만 url 추가되도록 할 것
     "rest_framework",
@@ -67,6 +72,7 @@ INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
