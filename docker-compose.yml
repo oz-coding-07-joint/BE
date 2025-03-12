@@ -1,0 +1,78 @@
+services:
+  django:
+    image: umdoong/oz_joint_dev:latest
+    container_name: django
+    env_file:
+      - .envs/.dev.env
+    environment:
+      - DJANGO_ENV=dev
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+    # network는 컨테이너 간 통신할 때 쓰는 network 설정
+    volumes:
+      - static-data:/app/staticfiles
+    networks:
+      - app_network
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - app_network
+
+  db: # postgresql
+    image: postgres:13-alpine
+    container_name: db
+    restart: always
+    env_file:
+      - .envs/.dev.env
+    volumes: # 데이터베이스 데이터를 영구적으로 저장하는 볼륨
+      - postgres-data:/var/lib/postgresql/data # postgres-data가 컨테이너의 /var/lib/postgresql/data 경로와 연결
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    networks:
+      - app_network
+
+  nginx:
+    image: umdoong/oz_joint_nginx:latest
+    container_name: nginx
+    restart: always
+    depends_on:
+      - django
+    ports:
+      - "80:80"
+#      - "443:443"
+    volumes:
+      - static-data:/app/staticfiles
+#      - ./certbot/conf:/etc/letsencrypt
+#      - ./certbot/www:/var/www/certbot
+    networks:
+      - app_network
+#    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+#  certbot:
+#    image: certbot/certbot
+#    container_name: certbot
+#    env_file:
+#      - .envs/prod.env
+#    volumes:
+#      - ./certbot/conf:/etc/letsencrypt
+#      - ./certbot/www:/var/www/certbot
+#    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres-data:
+  static-data:
+
+networks:
+  app_network:
