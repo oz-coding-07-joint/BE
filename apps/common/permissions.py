@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 
 from apps.registrations.models import Enrollment
+from apps.users.models import Student
 
 
 class IsActiveStudent(BasePermission):
@@ -13,15 +14,14 @@ class IsActiveStudent(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        # Student 객체가 있는지 확인
-        if not hasattr(request.user, "student"):
+        # Student 객체를 직접 조회
+        student = Student.objects.filter(user=request.user).first()
+        if not student:
             return False
 
-        student = request.user.student  # ✅ 올바르게 Student 객체 가져오기
-
-        # 수강신청 확인
+        # 수강 신청 여부 확인
         if not Enrollment.objects.filter(student=student, is_active=True).exists():
-            return False  # ✅ Response 대신 False 반환
+            return False
 
         return True
 
