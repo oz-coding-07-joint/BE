@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
-from apps.users.models import Instructor, Student
+from apps.users.models import Instructor, Student, User
 
 
 class LectureListSerializer(serializers.ModelSerializer):
@@ -27,11 +27,13 @@ class LectureListSerializer(serializers.ModelSerializer):
 
 
 class InstructorSerializer(serializers.ModelSerializer):
-    """강사의 경험 정보 포함 Serializer"""
+    """강사 정보 Serializer"""
+
+    nickname = serializers.CharField(source="user.nickname", read_only=True)
 
     class Meta:
         model = Instructor
-        fields = ["id", "experience"]
+        fields = ["id", "nickname", "experience"]
 
 
 class LectureDetailSerializer(serializers.ModelSerializer):
@@ -60,6 +62,24 @@ class LectureChapterSerializer(serializers.ModelSerializer):
     class Meta:
         model = LectureChapter
         fields = ["id", "lecture_id", "title", "material_url", "chapter_video_titles"]
+
+
+class ProgressTrackingCreateSerializer(serializers.ModelSerializer):
+    """강의 영상 학습 진행률 생성 Serializer"""
+
+    class Meta:
+        model = ProgressTracking
+        fields = ["chapter_video", "progress", "last_watched_time"]
+
+    def create(self, validated_data):
+        """
+        - 처음 학습할 경우 진행률 데이터를 생성한다.
+        - 기본 progress는 0.0, is_completed는 False로 설정된다.
+        """
+        validated_data.setdefault("progress", 0.0)
+        validated_data.setdefault("is_completed", False)
+
+        return super().create(validated_data)
 
 
 class ProgressTrackingSerializer(serializers.ModelSerializer):

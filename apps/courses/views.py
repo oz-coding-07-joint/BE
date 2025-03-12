@@ -13,10 +13,11 @@ from apps.courses.serializers import (
     LectureChapterSerializer,
     LectureDetailSerializer,
     LectureListSerializer,
+    ProgressTrackingCreateSerializer,
     ProgressTrackingSerializer,
     ProgressTrackingUpdateSerializer,
 )
-from apps.registrations.models import Enrollment
+from apps.users.models import Student
 
 
 class LectureListView(APIView):
@@ -35,15 +36,21 @@ class LectureListView(APIView):
         tags=["Course"],
     )
     def get(self, request):
-        try:
-            student = request.user.student
-            lectures = Lecture.objects.filter(enrollment__user=request.user, enrollment__is_active=True)
-            serializer = LectureListSerializer(lectures, many=True, context={"request": request})
-            return Response({"student_id": student.id, "lectures": serializer.data}, status=200)
-        except Exception as e:
-            return Response(
-                {"error": "서버 내부 오류", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # Student 객체 가져오기
+        student = Student.objects.filter(user=request.user).first()
+        if not student:
+            return Response({"error": "학생 계정이 아닙니다."}, status=403)
+
+        # 수강 신청된 강의 목록 조회
+        lectures = Lecture.objects.filter(course__enrollment__student=student, course__enrollment__is_active=True)
+
+        if not lectures.exists():
+            # 수강 신청이 안 되어 있으면 랜딩 페이지로 리디렉션
+            return Response({"redirect_url": "https://dummy-landing-page.com"}, status=302)
+
+        # Serializer 변환 후 반환
+        serializer = LectureListSerializer(lectures, many=True, context={"request": request})
+        return Response({"student_id": student.id, "lectures": serializer.data}, status=200)
 
 
 class LectureDetailView(APIView):
@@ -63,9 +70,9 @@ class LectureDetailView(APIView):
     )
     def get(self, request, lecture_id):
         try:
-            lecture = Lecture.objects.get(id=lecture_id)
+            lecture = Lecture.objects.select_related("instructor__user").get(id=lecture_id)
             serializer = LectureDetailSerializer(lecture)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Lecture.DoesNotExist:
             return Response({"error": "해당 과목을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -99,38 +106,58 @@ class LectureChapterListView(APIView):
             )
 
 
-class ChapterVideoProgressView(APIView):
-    """강의 영상 학습 진행률 조회 (chapter_video)"""
+class ChapterVideoProgressCreateView(APIView):
+    """강의 영상 학습 진행률 생성 API (POST)"""
 
     permission_classes = [IsAuthenticated, IsActiveStudent]
 
     @extend_schema(
-        summary="강의 영상 학습 진행률 조회",
-        description="사용자의 특정 강의 영상에 대한 학습 진행률을 조회합니다. 이어보기 기능을 제공할 예정입니다.",
+        summary="강의 영상 학습 진행률 생성",
+        description="특정 강의 영상(chapter_video)에 대한 학습 진행 데이터를 생성합니다. 해당 데이터가 없다면 새로 생성합니다.",
+        request=ProgressTrackingCreateSerializer,
         responses={
-            200: ProgressTrackingSerializer,
-            404: OpenApiResponse(description="진행 데이터를 찾을 수 없음"),
+            201: ProgressTrackingSerializer,
+            400: OpenApiResponse(description="잘못된 요청 데이터"),
             500: OpenApiResponse(description="서버 내부 오류"),
         },
         tags=["Course"],
     )
-    def get(self, request, student_id, chapter_video_id):
+    def post(self, request, chapter_video_id):
         try:
-            progress = ProgressTracking.objects.get(student_id=student_id, chapter_video_id=chapter_video_id)
-            serializer = ProgressTrackingSerializer(progress)
-            return Response(serializer.data)
-        except ProgressTracking.DoesNotExist:
-            return Response({"error": "진행 데이터를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            student = Student.objects.get(user=request.user)  # 현재 로그인한 사용자의 Student 객체 찾기
+
+            # ProgressTracking 데이터가 이미 존재하는지 확인
+            progress_tracking, created = ProgressTracking.objects.get_or_create(
+                student=student,
+                chapter_video_id=chapter_video_id,  # URL에서 받은 chapter_video_id 사용
+                defaults={"progress": 0.0, "is_completed": False},  # 기본값 설정
+            )
+
+            # 존재하는 경우 바로 반환
+            if not created:
+                return Response({"message": "이미 진행 데이터가 존재합니다."}, status=status.HTTP_200_OK)
+
+            # 새로 생성한 경우 Serializer를 이용해 응답
+            serializer = ProgressTrackingCreateSerializer(progress_tracking)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Student.DoesNotExist:
+            return Response({"error": "학생 계정을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response(
+                {"error": "서버 내부 오류", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 
 class ChapterVideoProgressUpdateView(APIView):
-    """강의 영상 학습 완료 표시 API (PATCH)"""
+    """강의 영상 학습 진행률 업데이트 API (PATCH)"""
 
     permission_classes = [IsAuthenticated, IsActiveStudent]
 
     @extend_schema(
-        summary="강의 영상 학습 완료 표시",
-        description="특정 강의 영상의 학습 진행률을 수정합니다. 시청 완료 표시(`is_completed=True`)에 사용됩니다.",
+        summary="강의 영상 학습 진행률 업데이트",
+        description="특정 강의 영상(chapter_video)의 학습 진행률을 수정합니다. 처음 학습한 경우에는 먼저 POST 요청을 보내야 합니다.",
         request=ProgressTrackingUpdateSerializer,
         responses={
             200: ProgressTrackingSerializer,
@@ -142,18 +169,20 @@ class ChapterVideoProgressUpdateView(APIView):
     )
     def patch(self, request, chapter_video_id):
         try:
-            progress_tracking = ProgressTracking.objects.get(
-                chapter_video_id=chapter_video_id, student=request.user.student
-            )
+            student = Student.objects.get(user=request.user)  # 현재 로그인한 사용자 찾기
+            progress_tracking = ProgressTracking.objects.get(student=student, chapter_video_id=chapter_video_id)
+
+            serializer = ProgressTrackingUpdateSerializer(progress_tracking, data=request.data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(ProgressTrackingSerializer(progress_tracking).data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Student.DoesNotExist:
+            return Response({"error": "학생 계정을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         except ProgressTracking.DoesNotExist:
             return Response({"error": "진행 데이터를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = ProgressTrackingUpdateSerializer(progress_tracking, data=request.data, partial=True)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(ProgressTrackingSerializer(progress_tracking).data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChapterVideoDetailView(APIView):
