@@ -2,7 +2,7 @@ from django.db import models
 
 from apps.common.models import BaseModel
 from apps.common.utils import class_lecture_file_path
-from apps.users.models import Student, User
+from apps.users.models import Instructor, Student, User
 
 
 class Course(BaseModel):
@@ -17,7 +17,7 @@ class Course(BaseModel):
 
 class Lecture(BaseModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    instructor = models.ForeignKey(Instructor, on_delete=models.SET_NULL, null=True)
     title = models.CharField(max_length=50)
     thumbnail = models.ImageField(upload_to=class_lecture_file_path, null=True, blank=True)
     introduction = models.CharField(max_length=1000)  # 강의 소개
