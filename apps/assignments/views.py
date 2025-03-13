@@ -38,7 +38,7 @@ class AssignmentView(APIView):
             assignments_data = json.loads(cached_data)
         else:
             # ChapterVideo의 lecture_chapter_id가 lecture_chapter_id와 일치하는 과제들을 조회
-            assignments = Assignment.objects.filter(chapter_video__lecture_chapter_id=lecture_chapter_id)
+            assignments = Assignment.objects.filter(chapter_video__lecture_chapter__id=lecture_chapter_id)
             serializer = AssignmentSerializer(assignments, many=True)
             assignments_data = serializer.data
             # 데이터를 JSON 문자열로 변환 후 Redis에 600초(10분) 동안 저장
