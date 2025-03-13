@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.common.permissions import IsActiveStudentOrInstructor
 from apps.common.utils import redis_client
 
 from .models import Assignment, AssignmentComment
@@ -16,6 +17,9 @@ from .serializers import (
 
 
 class AssignmentView(APIView):
+    # 수강 중인 학생 또는 강사만 접근할 수 있음.
+    permission_classes = [IsActiveStudentOrInstructor]
+
     @extend_schema(
         summary="강의 챕터별 과제 목록 조회",
         description="lecture_chapter_id와 연결된 과제들을 조회합니다.",
@@ -34,18 +38,17 @@ class AssignmentView(APIView):
         cached_data = redis_client.get(cache_key)
 
         if cached_data:
-            # Redis에 저장된 JSON 문자열을 파싱하여 Python 객체로 변환
             assignments_data = json.loads(cached_data)
         else:
-            # ChapterVideo의 lecture_chapter_id가 lecture_chapter_id와 일치하는 과제들을 조회
+            # lecture_chapter_id에 연결된 과제들을 조회
             assignments = Assignment.objects.filter(chapter_video__lecture_chapter__id=lecture_chapter_id)
             serializer = AssignmentSerializer(assignments, many=True)
             assignments_data = serializer.data
-            # 데이터를 JSON 문자열로 변환 후 Redis에 600초(10분) 동안 저장
-            redis_client.setex(cache_key, 600, json.dumps(assignments_data))
+            redis_client.setex(cache_key, 18000, json.dumps(assignments_data))
 
         return Response(
-            {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data}, status=status.HTTP_200_OK
+            {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data},
+            status=status.HTTP_200_OK,
         )
 
 
@@ -54,6 +57,8 @@ class AssignmentView(APIView):
 
 
 class AssignmentCommentView(APIView):
+    # 수강 중인 학생 또는 강사만 접근할 수 있음.
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="수강생 과제 및 피드백 목록 조회",
@@ -70,9 +75,6 @@ class AssignmentCommentView(APIView):
         학생이 제출한 과제는 정적으로 조회,
         과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
         """
-        if not request.user or not request.user.is_authenticated:
-            return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
-
         if request.user.is_staff:
             # 강사는 해당 과제에 속한 모든 최상위 댓글을 조회
             comments = AssignmentComment.objects.filter(parent__isnull=True, assignment=assignment_id)
@@ -81,7 +83,6 @@ class AssignmentCommentView(APIView):
             comments = AssignmentComment.objects.filter(
                 parent__isnull=True, assignment=assignment_id, user=request.user
             )
-
         serializer = AssignmentCommentSerializer(comments, many=True, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -90,40 +91,25 @@ class AssignmentCommentView(APIView):
         description="assignment_id를 통해 과제가 존재하는지 확인하고, 과제 제출을 처리합니다.",
         request=AssignmentCommentCreateSerializer,
         responses={
-            201: OpenApiExample(
-                "성공 예시",
-                value={"detail": "과제 제출이 완료 되었습니다."},
-            ),
-            404: OpenApiExample(
-                "과제 없음",
-                value={"detail": "해당 과제를 찾을 수 없습니다."},
-            ),
-            400: OpenApiExample(
-                "오류 예시",
-                value={"detail": "유효하지 않은 데이터입니다."},
-            ),
+            201: OpenApiExample("성공 예시", value={"detail": "과제 제출이 완료 되었습니다."}),
+            404: OpenApiExample("과제 없음", value={"detail": "해당 과제를 찾을 수 없습니다."}),
+            400: OpenApiExample("오류 예시", value={"detail": "유효하지 않은 데이터입니다."}),
+            403: OpenApiExample("오류 예시", value={"detail": "수강 중인 학생만 과제 제출이 가능합니다."}),
         },
         tags=["Assignment"],
     )
     # 강의 과제 제출
     def post(self, request, assignment_id):
-        if not request.user or not request.user.is_authenticated:
-            return Response({"error": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # assignment_id를 통해 과제가 존재하는지 확인
         try:
             assignment = Assignment.objects.get(id=assignment_id)
         except Assignment.DoesNotExist:
             return Response({"detail": "해당 과제를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 대댓글 작성은 강사가 아니면 불허
+        # 강사는 대댓글 작성이 가능하지만, 학생은 대댓글 작성 불가
         if request.data.get("parent") and not request.user.is_staff:
             return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        # 클라이언트는 content와 file_url만 전송하도록 하고,
-        # assignment와 user 정보는 context로 전달합니다.
         data = request.data.copy()
-
         serializer = AssignmentCommentCreateSerializer(
             data=data, context={"assignment": assignment, "user": request.user}
         )
