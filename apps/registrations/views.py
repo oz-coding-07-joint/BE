@@ -25,11 +25,10 @@ class EnrollmentRegistrationView(APIView):
         if not request.user or not request.user.is_authenticated:
             return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ForeignKey를 사용하므로 역참조 기본 이름은 student_set
-        if not request.user.student_set.exists():
+        # OneToOneField이므로 student_set 대신 direct attribute 접근
+        if not hasattr(request.user, "student"):
             return Response({"detail": "학생만 수강 신청할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
-
-        student = request.user.student_set.first()
+        student = request.user.student
 
         # 이미 해당 학생이 해당 강의에 등록되어 있는지 확인
         if Enrollment.objects.filter(student=student, course=course_id).exists():
@@ -68,11 +67,10 @@ class EnrollmentInProgressView(APIView):
         if not request.user or not request.user.is_authenticated:
             return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 학생 정보가 ForeignKey로 연결되어 있으므로, 역참조(student_set)를 사용
-        if not request.user.student_set.exists():
+        if not hasattr(request.user, "student"):
             return Response({"detail": "학생 정보가 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        student = request.user.student
 
-        student = request.user.student_set.first()
         enrollments = Enrollment.objects.filter(is_active=True, student=student)
         if not enrollments.exists():
             return Response({"detail": "수강 중인 클래스가 없습니다."}, status=status.HTTP_404_NOT_FOUND)

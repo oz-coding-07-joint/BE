@@ -12,6 +12,16 @@ class Assignment(BaseModel):
     content = models.CharField(max_length=1000)
     file_url = models.FileField(upload_to=assignment_material_path, null=True, blank=True)
 
+    def save(self, *args, **kwargs):
+        if not self.pk and self.file_url:
+            temp_file = self.file_url
+            self.file_url = None
+            super().save(*args, **kwargs)
+            self.file_url = temp_file
+            super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
+
     class Meta:
         db_table = "assignment"
 

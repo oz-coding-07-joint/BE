@@ -24,3 +24,18 @@ class IsActiveStudent(BasePermission):
             return False  # ✅ Response 대신 False 반환
 
         return True
+
+
+class IsActiveStudentOrInstructor(BasePermission):
+    message = "수강 중인 학생 또는 강사만 이 작업을 수행할 수 있습니다."
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        # 강사인 경우 바로 허용
+        if request.user.is_staff:
+            return True
+        # 학생인 경우, 해당 학생이 활성 Enrollment를 가지고 있는지 확인
+        if hasattr(request.user, "student"):
+            return Enrollment.objects.filter(student=request.user.student, is_active=True).exists()
+        return False
