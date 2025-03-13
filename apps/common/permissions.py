@@ -26,17 +26,6 @@ class IsActiveStudent(BasePermission):
         return True
 
 
-class IsActiveInstructor(BasePermission):
-    """
-    강사로 인증된 사용자(예: Is staff=True)는 모든 작업에 접근할 수 있도록 허용
-    """
-
-    message = "강사만 이 작업을 수행할 수 있습니다."
-
-    def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and request.user.is_staff)
-
-
 class IsActiveStudentOrInstructor(BasePermission):
     message = "수강 중인 학생 또는 강사만 이 작업을 수행할 수 있습니다."
 
