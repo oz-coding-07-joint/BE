@@ -65,8 +65,7 @@ def assignment_comment_file_path(instance, filename):
 
     unique_filename = generate_unique_filename(filename)
 
-    # 강사 여부 확인 (DB 조회 최적화)
-    is_instructor = getattr(instance.user, "instructor", None) is not None
+    is_instructor = hasattr(instance.user, "instructor")
 
     # 파일 저장 경로 설정
     base_path = f"classes/{instance.assignment.chapter_video.lecture_chapter.lecture.course_id}/assignments/{instance.assignment.pk}"
