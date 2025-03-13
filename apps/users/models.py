@@ -66,7 +66,7 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
         if self.is_active and self.is_superuser:
             return True
         return False
-    
+
     def delete(self, *args, **kwargs):
         # OneToOne 관계 확인 후 삭제
         for field in self._meta.get_fields():
