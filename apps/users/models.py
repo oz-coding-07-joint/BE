@@ -72,7 +72,7 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
 
 
 class Student(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     class Meta:
         db_table = "student"
@@ -82,7 +82,7 @@ class Student(BaseModel):
 
 
 class Instructor(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     experience = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:
