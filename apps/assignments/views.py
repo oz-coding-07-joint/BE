@@ -75,7 +75,7 @@ class AssignmentCommentView(APIView):
         학생이 제출한 과제는 정적으로 조회,
         과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
         """
-        if request.user.is_staff:
+        if hasattr(request.user, "instructor"):
             # 강사는 해당 과제에 속한 모든 최상위 댓글을 조회
             comments = AssignmentComment.objects.filter(parent__isnull=True, assignment=assignment_id)
         else:
@@ -106,7 +106,7 @@ class AssignmentCommentView(APIView):
             return Response({"detail": "해당 과제를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         # 강사는 대댓글 작성이 가능하지만, 학생은 대댓글 작성 불가
-        if request.data.get("parent") and not request.user.is_staff:
+        if request.data.get("parent") and not hasattr(request.user, "instructor"):
             return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data.copy()
