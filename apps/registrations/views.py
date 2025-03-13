@@ -25,7 +25,7 @@ class EnrollmentRegistrationView(APIView):
         if not request.user or not request.user.is_authenticated:
             return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ForeignKey를 사용하므로 역참조 기본 이름은 student_set
+        # OneToOneField이므로 student_set 대신 direct attribute 접근
         if not hasattr(request.user, "student"):
             return Response({"detail": "학생만 수강 신청할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
         student = request.user.student
