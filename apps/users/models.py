@@ -67,6 +67,17 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
             return True
         return False
 
+    def delete(self, *args, **kwargs):
+        # OneToOne 관계 확인 후 삭제
+        for field in self._meta.get_fields():
+            if isinstance(field, models.OneToOneField):
+                related_obj = getattr(self, field.name, None)
+                if related_obj:
+                    related_obj.delete()
+
+        # 이후 user 삭제
+        super().delete(*args, **kwargs)
+
     class Meta:
         db_table = "user"
 
