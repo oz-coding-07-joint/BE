@@ -206,3 +206,24 @@ AWS_S3_ENDPOINT_URL = "https://kr.object.ncloudstorage.com"  # NCP Object Storag
 AWS_S3_REGION_NAME = "kr-standard"
 AWS_S3_DEFAULT_ACL = "public-read"
 MEDIA_URL = f"https://{os.getenv('NCP_BUCKET_NAME')}.kr.object.ncloudstorage.com/"
+
+
+# Social
+SOCIALACCOUNT_ADAPTER = "apps.users.adapters.CustomSocialAccountAdapter"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+
+SITE_ID = 1
+
+REST_USE_JWT = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_LOGOUT_ON_GET = True  # 로그아웃 요청 시 즉시 로그아웃
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_AUTO_SIGNUP = False  # 추가 정보 입력을 위해 False로 설정
