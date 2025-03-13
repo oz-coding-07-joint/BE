@@ -67,12 +67,23 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
             return True
         return False
 
+    def delete(self, *args, **kwargs):
+        # OneToOne 관계 확인 후 삭제
+        for field in self._meta.get_fields():
+            if isinstance(field, models.OneToOneField):
+                related_obj = getattr(self, field.name, None)
+                if related_obj:
+                    related_obj.delete()
+
+        # 이후 user 삭제
+        super().delete(*args, **kwargs)
+
     class Meta:
         db_table = "user"
 
 
 class Student(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     class Meta:
         db_table = "student"
@@ -82,7 +93,7 @@ class Student(BaseModel):
 
 
 class Instructor(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     experience = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:

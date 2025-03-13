@@ -29,3 +29,4 @@ class TermsAgreement(BaseModel, SoftDeleteModel):
 
     class Meta:
         db_table = "terms_agreement"
+        unique_together = (("user", "terms"),)
