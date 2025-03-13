@@ -12,4 +12,6 @@ class TermsAdmin(BaseModelAdmin):
 
 @admin.register(TermsAgreement)
 class TermsAgreementAdmin(BaseModelAdmin):
-    pass
+    list_display = ("user__email", "terms", "is_agree")
+    search_fields = ("user__email",)
+    list_filter = ("terms", "is_agree")
