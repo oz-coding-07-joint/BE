@@ -416,7 +416,9 @@ class MyinfoView(APIView):
         tags=["User"],
     )
     def get(self, request):
-        return
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
         summary="회원 정보 수정",
