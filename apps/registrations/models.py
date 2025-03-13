@@ -7,7 +7,7 @@ from apps.users.models import Student
 
 class Enrollment(BaseModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    student = models.OneToOneField(Student, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=False)
 
     class Meta:
