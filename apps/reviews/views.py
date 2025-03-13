@@ -68,9 +68,9 @@ class ReviewView(APIView):
         except Lecture.DoesNotExist:
             return Response({"detail": "해당 강의를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        if not request.user.student_set.exists():
+        if not hasattr(request.user, "student"):
             return Response({"detail": "학생만 후기를 등록할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
-        student = request.user.student_set.first()
+        student = request.user.student
 
         if not Enrollment.objects.filter(student=student, course=lecture.course, is_active=True).exists():
             return Response(
@@ -105,9 +105,9 @@ class MyReviewListView(APIView):
         if not request.user or not request.user.is_authenticated:
             return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not request.user.student_set.exists():
+        if not hasattr(request.user, "student"):
             return Response({"detail": "학생 정보가 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        student = request.user.student_set.first()
+        student = request.user.student
 
         reviews = Review.objects.filter(student=student)
         if reviews.exists():
