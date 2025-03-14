@@ -3,7 +3,6 @@ import json
 from django.http import HttpResponseForbidden
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -25,7 +24,7 @@ from apps.users.models import Student
 class LectureListView(APIView):
     """수강 신청 후 승인된 학생만 접근 가능한 과목 목록 조회"""
 
-    permission_classes = [IsAuthenticated, IsEnrolledStudent]
+    permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
         summary="과목 목록 조회",
@@ -65,7 +64,7 @@ class LectureListView(APIView):
 class LectureDetailView(APIView):
     """과목 상세 조회 (수업정보)"""
 
-    permission_classes = [IsAuthenticated, IsEnrolledStudent]
+    permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
         summary="과목 상세 조회",
@@ -89,7 +88,7 @@ class LectureDetailView(APIView):
 class LectureChapterListView(APIView):
     """과목의 챕터 및 강의 영상 제목 목록 조회 (수업 목록 드롭다운)"""
 
-    permission_classes = [IsAuthenticated, IsEnrolledStudent]
+    permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
         summary="과목의 챕터 및 강의 영상 제목 목록 조회",
@@ -132,7 +131,7 @@ class LectureChapterListView(APIView):
 class ChapterVideoProgressCreateView(APIView):
     """강의 영상 학습 진행률 생성 API (POST)"""
 
-    permission_classes = [IsAuthenticated, IsEnrolledStudent]
+    permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
         summary="강의 영상 학습 진행률 생성",
@@ -171,7 +170,7 @@ class ChapterVideoProgressCreateView(APIView):
 class ChapterVideoProgressUpdateView(APIView):
     """강의 영상 학습 진행률 업데이트 API (PATCH)"""
 
-    permission_classes = [IsAuthenticated, IsEnrolledStudent]
+    permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
         summary="강의 영상 학습 진행률 업데이트",
@@ -216,7 +215,7 @@ class ChapterVideoDetailView(APIView):
     강의 영상 상세 조회 (chapter_video)
     """
 
-    permission_classes = [IsAuthenticated, IsEnrolledStudent]
+    permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
         summary="강의 영상 상세 조회",

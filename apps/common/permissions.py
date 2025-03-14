@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied
 
 from apps.registrations.models import Enrollment
 from apps.users.models import Student
@@ -12,18 +13,18 @@ class IsEnrolledStudent(BasePermission):
     def has_permission(self, request, view):
         # 사용자 인증 확인
         if not request.user or not request.user.is_authenticated:
-            return False
+            raise PermissionDenied("로그인이 필요한 서비스 입니다.")
 
         # Student 객체를 직접 조회
         student = Student.objects.filter(user=request.user).first()
         if not student:
-            return False
+            raise PermissionDenied("해당 강의를 수강 중인 학생만 접근할 수 있습니다.")  # 403 Forbidden 발생
 
         # 수강 신청 여부 확인
         if not Enrollment.objects.filter(student=student, is_active=True).exists():
-            return False
+            raise PermissionDenied("해당 강의를 수강 중인 학생만 접근할 수 있습니다.")  # 403 Forbidden 발생
 
-        return True
+        return True  # 모든 조건을 만족하면 접근 허용
 
 
 class IsActiveStudentOrInstructor(BasePermission):
