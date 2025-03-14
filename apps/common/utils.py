@@ -144,7 +144,7 @@ def delete_file_from_ncp(file_path):
 
 
 redis_client = redis.StrictRedis(
-    host=os.getenv("REDIS_HOST", "localhost"),  # 도커에서는 redis의 컨테이너 이름, 로컬에서는 localhost
+    host=os.getenv("REDIS_HOST"),
     port=6379,
     db=0,
     decode_responses=True,  # 문자열 반환을 위해 decode_responses=True 설정
