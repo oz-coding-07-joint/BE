@@ -4,7 +4,7 @@ from apps.registrations.models import Enrollment
 from apps.users.models import Student
 
 
-class IsActiveStudent(BasePermission):
+class IsEnrolledStudent(BasePermission):
     """
     로그인한 사용자 중 수강신청이 승인된 학생만 접근 가능.
     """
