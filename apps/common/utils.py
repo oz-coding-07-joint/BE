@@ -1,7 +1,53 @@
+import base64
+import hashlib
+import hmac
 import os
+import time
+import urllib.parse
 import uuid
 
+import boto3
 import redis
+from django.conf import settings
+
+
+def generate_ncp_signed_url(object_name, chapter_video_id, expiration=120):
+    """
+    NCP Object Storage에서 Signed URL을 생성하는 함수.
+    expiration: URL 만료 시간 (초) (기본값 2분)
+    """
+    access_key = os.getenv("NCP_ACCESS_KEY_ID")
+    secret_key = os.getenv("NCP_SECRET_ACCESS_KEY")
+    bucket_name = os.getenv("NCP_BUCKET_NAME")
+    endpoint = "https://kr.object.ncloudstorage.com"
+
+    if not all([access_key, secret_key, bucket_name]):
+        raise ValueError("NCP Object Storage 설정값이 없습니다.")
+
+    # 만료 시간 설정 (Unix Timestamp)
+    expires = int(time.time()) + expiration
+
+    # 서명 생성
+    string_to_sign = f"GET\n\n\n{expires}\n/{bucket_name}/{object_name}"
+    signature = base64.b64encode(
+        hmac.new(secret_key.encode("utf-8"), string_to_sign.encode("utf-8"), hashlib.sha1).digest()
+    ).decode("utf-8")
+
+    # Signed URL 생성
+    signed_url = f"{endpoint}/{bucket_name}/{object_name}?" + urllib.parse.urlencode(
+        {"AWSAccessKeyId": access_key, "Expires": expires, "Signature": signature}
+    )
+
+    # Redis 키 설정
+    redis_key = f"signed_url:{chapter_video_id}"  # ✅ chapter_video_id 기반으로 저장
+
+    # ✅ 기존 Signed URL 즉시 삭제
+    redis_client.delete(redis_key)
+
+    # ✅ 새로운 Signed URL 저장 (2분 후 자동 만료)
+    redis_client.setex(redis_key, expiration, signed_url)
+
+    return signed_url
 
 
 def generate_unique_filename(filename):
@@ -65,8 +111,7 @@ def assignment_comment_file_path(instance, filename):
 
     unique_filename = generate_unique_filename(filename)
 
-    # 강사 여부 확인 (DB 조회 최적화)
-    is_instructor = getattr(instance.user, "instructor", None) is not None
+    is_instructor = hasattr(instance.user, "instructor")
 
     # 파일 저장 경로 설정
     base_path = f"classes/{instance.assignment.chapter_video.lecture_chapter.lecture.course_id}/assignments/{instance.assignment.pk}"
@@ -75,8 +120,31 @@ def assignment_comment_file_path(instance, filename):
     return f"{base_path}/{folder}/{unique_filename}"
 
 
+def delete_file_from_ncp(file_path):
+    """NCP Object Storage에서 파일 삭제"""
+    if not file_path:
+        return
+
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
+
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    object_key = file_path.replace(settings.MEDIA_URL, "").lstrip("/")
+
+    try:
+        s3_client.delete_object(Bucket=bucket_name, Key=object_key)
+        print(f"Deleted from NCP Storage: {object_key}")
+    except Exception as e:
+        print(f"Error deleting file from NCP: {e}")
+
+
 redis_client = redis.StrictRedis(
-    host=os.getenv("REDIS_HOST"),  # 도커에서는 redis의 컨테이너 이름, 로컬에서는 localhost
+    host=os.getenv("REDIS_HOST"),
     port=6379,
     db=0,
     decode_responses=True,  # 문자열 반환을 위해 decode_responses=True 설정
