@@ -1,5 +1,5 @@
-from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import BasePermission
 
 from apps.registrations.models import Enrollment
 from apps.users.models import User
