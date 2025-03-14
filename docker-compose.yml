@@ -3,9 +3,9 @@ services:
     image: umdoong/oz_joint_dev:latest
     container_name: django
     env_file:
-      - .envs/.dev.env
+      - .envs/.prod.env
     environment:
-      - DJANGO_ENV=dev
+      - DJANGO_ENV=prod
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
     # network는 컨테이너 간 통신할 때 쓰는 network 설정
@@ -33,7 +33,7 @@ services:
     container_name: db
     restart: always
     env_file:
-      - .envs/.dev.env
+      - .envs/.prod.env
     volumes: # 데이터베이스 데이터를 영구적으로 저장하는 볼륨
       - postgres-data:/var/lib/postgresql/data # postgres-data가 컨테이너의 /var/lib/postgresql/data 경로와 연결
     environment:
