@@ -27,17 +27,13 @@ def generate_ncp_signed_url(object_name, chapter_video_id, expiration=120):
 
     # 서명 생성
     string_to_sign = f"GET\n\n\n{expires}\n/{bucket_name}/{object_name}"
-    signature = base64.b64encode(hmac.new(
-            secret_key.encode("utf-8"),
-            string_to_sign.encode("utf-8"),
-            hashlib.sha1
-        ).digest()).decode("utf-8")
+    signature = base64.b64encode(
+        hmac.new(secret_key.encode("utf-8"), string_to_sign.encode("utf-8"), hashlib.sha1).digest()
+    ).decode("utf-8")
 
     # Signed URL 생성
     signed_url = f"{endpoint}/{bucket_name}/{object_name}?" + urllib.parse.urlencode(
-        {"AWSAccessKeyId": access_key,
-         "Expires": expires,
-         "Signature": signature}
+        {"AWSAccessKeyId": access_key, "Expires": expires, "Signature": signature}
     )
 
     # Redis 키 설정
