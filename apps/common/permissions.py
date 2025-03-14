@@ -17,10 +17,10 @@ class IsEnrolledStudent(BasePermission):
 
         user = User.objects.select_related("student").filter(id=request.user.id).first()
 
-        if not user or not hasattr(user, "student"):
-            raise PermissionDenied("해당 강의를 수강 중인 학생만 접근할 수 있습니다.")  # 403 Forbidden 발생
+        if not (user and user.student):  # 한 줄로 합쳐서 최적화
+            raise PermissionDenied("학생만 접근할 수 있습니다.")
 
-        student = user.student
+        student = user.student  # student 객체 안전하게 사용 가능
 
         # 수강 신청 여부 확인
         if not Enrollment.objects.filter(student=student, is_active=True).exists():
