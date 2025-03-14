@@ -117,7 +117,7 @@ class LectureChapterListView(APIView):
             serializer = LectureChapterSerializer(chapters, many=True)
             response_data = serializer.data
 
-            # Redis에 캐싱 (60분 동안 유지)
+            # Redis에 캐싱 (다섯시간)
             redis_client.setex(cache_key, 18000, json.dumps(response_data))
 
             return Response(response_data, status=status.HTTP_200_OK)
