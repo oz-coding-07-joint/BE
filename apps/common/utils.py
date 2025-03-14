@@ -6,7 +6,9 @@ import time
 import urllib.parse
 import uuid
 
+import boto3
 import redis
+from django.conf import settings
 
 
 def generate_ncp_signed_url(object_name, chapter_video_id, expiration=120):
@@ -116,6 +118,29 @@ def assignment_comment_file_path(instance, filename):
     folder = "feedbacks" if is_instructor else "submissions"
 
     return f"{base_path}/{folder}/{unique_filename}"
+
+
+def delete_file_from_ncp(file_path):
+    """NCP Object Storage에서 파일 삭제"""
+    if not file_path:
+        return
+
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
+
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+    object_key = file_path.replace(settings.MEDIA_URL, "").lstrip("/")
+
+    try:
+        s3_client.delete_object(Bucket=bucket_name, Key=object_key)
+        print(f"Deleted from NCP Storage: {object_key}")
+    except Exception as e:
+        print(f"Error deleting file from NCP: {e}")
 
 
 redis_client = redis.StrictRedis(

@@ -1,33 +1,12 @@
-import boto3
-from django.conf import settings
 from django.db import models
 
 from apps.common.models import BaseModel
-from apps.common.utils import class_lecture_file_path, generate_ncp_signed_url
+from apps.common.utils import (
+    class_lecture_file_path,
+    delete_file_from_ncp,
+    generate_ncp_signed_url,
+)
 from apps.users.models import Instructor, Student
-
-
-def delete_file_from_ncp(file_path):
-    """NCP Object Storage에서 파일 삭제"""
-    if not file_path:
-        return
-
-    s3_client = boto3.client(
-        "s3",
-        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_S3_REGION_NAME,
-    )
-
-    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
-    object_key = file_path.replace(settings.MEDIA_URL, "").lstrip("/")
-
-    try:
-        s3_client.delete_object(Bucket=bucket_name, Key=object_key)
-        print(f"Deleted from NCP Storage: {object_key}")
-    except Exception as e:
-        print(f"Error deleting file from NCP: {e}")
 
 
 class Course(BaseModel):
