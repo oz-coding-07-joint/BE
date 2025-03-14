@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
-from apps.users.models import Instructor, Student, User
+from apps.users.models import Instructor, Student
+from config.settings import base
 
 
 class LectureListSerializer(serializers.ModelSerializer):
@@ -64,24 +65,6 @@ class LectureChapterSerializer(serializers.ModelSerializer):
         fields = ["id", "lecture_id", "title", "material_url", "chapter_video_titles"]
 
 
-class ProgressTrackingCreateSerializer(serializers.ModelSerializer):
-    """강의 영상 학습 진행률 생성 Serializer"""
-
-    class Meta:
-        model = ProgressTracking
-        fields = ["chapter_video", "progress", "last_watched_time"]
-
-    def create(self, validated_data):
-        """
-        - 처음 학습할 경우 진행률 데이터를 생성한다.
-        - 기본 progress는 0.0, is_completed는 False로 설정된다.
-        """
-        validated_data.setdefault("progress", 0.0)
-        validated_data.setdefault("is_completed", False)
-
-        return super().create(validated_data)
-
-
 class ProgressTrackingSerializer(serializers.ModelSerializer):
     """강의 영상 학습 진행률 조회 Serializer"""
 
@@ -92,32 +75,99 @@ class ProgressTrackingSerializer(serializers.ModelSerializer):
         fields = ["id", "student_id", "progress", "is_completed"]
 
 
-class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
-    """강의 영상 학습 진행률 업데이트 Serializer"""
+class ProgressTrackingCreateSerializer(serializers.ModelSerializer):
+    last_watched_time = serializers.FloatField()
+    progress = serializers.FloatField(read_only=True)  # ✅ progress 추가
 
     class Meta:
         model = ProgressTracking
-        fields = ["progress", "last_watched_time"]
+        fields = ["last_watched_time", "progress"]  # ✅ 불필요한 필드 제거
+
+    def validate_last_watched_time(self, value):
+        """✅ last_watched_time이 음수값이 되는 것을 방지"""
+        if value < 0:
+            raise serializers.ValidationError("last_watched_time은 0보다 작을 수 없습니다.")
+        return value
+
+    def create(self, validated_data):
+        """✅ student와 chapter_video를 자동 설정"""
+        request = self.context["request"]
+        student = Student.objects.get(user=request.user)  # ✅ 현재 로그인한 사용자의 student 가져오기
+        chapter_video_id = self.context["chapter_video_id"]
+        chapter_video = ChapterVideo.objects.get(id=chapter_video_id)
+
+        last_watched_time = validated_data["last_watched_time"]
+        total_duration = request.data.get("total_duration", 1)  # ✅ 프론트엔드에서 제공하는 total_duration 사용
+
+        # ✅ 진행률(progress) 계산 (음수 방지)
+        progress = max((last_watched_time / total_duration) * 100, 0) if total_duration > 0 else 0
+        is_completed = progress >= 98  # ✅ 98% 이상이면 완료 처리
+
+        tracking = ProgressTracking.objects.create(
+            student=student,
+            chapter_video=chapter_video,
+            last_watched_time=last_watched_time,
+            progress=progress,
+            is_completed=is_completed,
+        )
+
+        return tracking  # ✅ 생성된 객체 반환 (progress 값 포함)
+
+
+class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
+    last_watched_time = serializers.FloatField()
+
+    class Meta:
+        model = ProgressTracking
+        fields = ["last_watched_time", "progress", "is_completed"]
+        read_only_fields = ["progress", "is_completed"]
+
+    def validate(self, data):
+        """✅ last_watched_time이 음수값이 되거나 영상 길이를 초과하지 않도록 검증"""
+        instance = self.instance
+        last_watched_time = data.get("last_watched_time", instance.last_watched_time)
+        total_duration = self.context["request"].data.get("total_duration")  # ✅ 프론트에서 제공
+
+        if total_duration is None:
+            raise serializers.ValidationError("total_duration 값이 필요합니다.")  # ✅ 필수 값 검증
+
+        if last_watched_time < 0:
+            raise serializers.ValidationError("last_watched_time은 0보다 작을 수 없습니다.")
+
+        if last_watched_time > total_duration:
+            raise serializers.ValidationError("last_watched_time이 영상 길이를 초과할 수 없습니다.")
+
+        return data
 
     def update(self, instance, validated_data):
-        """
-        - `progress` 값이 100%에 도달하면 `is_completed=True` 자동 설정
-        - `last_watched_time`도 업데이트 가능
-        """
-        instance.progress = validated_data.get("progress", instance.progress)
-        instance.last_watched_time = validated_data.get("last_watched_time", instance.last_watched_time)
+        """✅ 진행률 계산 시 프론트에서 제공한 total_duration 사용"""
+        last_watched_time = validated_data.get("last_watched_time", instance.last_watched_time)
+        total_duration = self.context["request"].data.get("total_duration")
 
-        if instance.progress >= 100.0:
-            instance.progress = 100.0  # 최대 100% 유지
-            instance.is_completed = True  # 완료 처리
+        progress = (last_watched_time / total_duration) * 100 if total_duration > 0 else 0
+        is_completed = progress >= 98  # ✅ 98% 이상이면 완료 처리
 
+        instance.last_watched_time = last_watched_time
+        instance.progress = progress
+        instance.is_completed = is_completed
         instance.save()
+
         return instance
 
 
 class ChapterVideoSerializer(serializers.ModelSerializer):
-    """강의 영상 상세 조회 Serializer"""
+    video_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ChapterVideo
-        fields = ["id", "video_url"]
+        fields = ["id", "title", "video_url"]
+
+    def get_video_url(self, obj):
+        """NCP Object Storage에서 직접 접근 가능한 URL 반환"""
+        if obj.video_url:  # video_url 필드가 이미 존재하는 경우 직접 반환
+            return obj.video_url
+
+        if obj.video_file:  # video_file이 존재하면 S3 URL을 생성
+            return f"https://{base.AWS_STORAGE_BUCKET_NAME}.kr.object.ncloudstorage.com/{obj.video_file.name}"
+
+        return None
