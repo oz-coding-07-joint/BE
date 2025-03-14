@@ -36,7 +36,7 @@ class IsActiveStudentOrInstructor(BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         # 강사인 경우 바로 허용
-        if request.user.is_staff:
+        if hasattr(request.user, "instructor"):
             return True
         # 학생인 경우, 해당 학생이 활성 Enrollment를 가지고 있는지 확인
         if hasattr(request.user, "student"):
