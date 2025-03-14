@@ -173,14 +173,14 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "https://api.umdoong.shop"]
 CORS_ALLOW_CREDENTIALS = True  # 쿠키를 포함한 요청 허용
 CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
 CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
-# CSRF_COOKIE_DOMAIN = ".umdoong.shop"
-# SESSION_COOKIE_DOMAIN = ".umdoong.shop"
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "https://api.umdoong.shop"]
+CSRF_COOKIE_DOMAIN = ".umdoong.shop"
+SESSION_COOKIE_DOMAIN = ".umdoong.shop"
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

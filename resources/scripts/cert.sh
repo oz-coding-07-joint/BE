@@ -7,4 +7,4 @@ docker-compose run --rm --entrypoint "\
     --server https://acme-v02.api.letsencrypt.org/directory \
     --force-renewal" certbot
 
-docker-compose exec app-nginx-1 nginx -s reload
+docker-compose exec nginx nginx -s reload

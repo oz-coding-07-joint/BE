@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from .base import *
 
-DEBUG = False
+DEBUG = True
 
 REFRESH_TOKEN_COOKIE_SECURE = True
 
