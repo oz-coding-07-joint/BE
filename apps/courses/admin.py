@@ -6,7 +6,9 @@ from .models import ChapterVideo, Course, Lecture, LectureChapter
 
 @admin.register(Course)
 class CourseAdmin(BaseModelAdmin):
-    pass
+    list_display = ("title", "price", "total_duration", "max_students")
+    search_fields = ("title",)
+    list_filter = ("total_duration", "max_students")
 
 
 @admin.register(Lecture)

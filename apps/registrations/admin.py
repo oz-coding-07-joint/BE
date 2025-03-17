@@ -7,4 +7,5 @@ from .models import Enrollment
 
 @admin.register(Enrollment)
 class EnrollmentAdmin(BaseModelAdmin):
-    pass
+    list_display = ("id", "course", "student", "is_active", "created_at", "updated_at")
+    search_fields = ("course__title", "student__user__email", "student__user__username")
