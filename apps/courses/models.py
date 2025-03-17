@@ -59,7 +59,7 @@ class LectureChapter(BaseModel):
     material_url = models.FileField(upload_to=class_lecture_file_path, null=True, blank=True)  # 학습 자료
 
     def __str__(self):
-        return f"{self.lecture.title} - {self.title}"  # ✅ Lecture 제목 + 챕터 제목 출력
+        return f"{self.lecture.title} - {self.title}"  # Lecture 제목 + 챕터 제목 출력
 
     def save(self, *args, **kwargs):
         """파일이 변경될 경우 기존 파일 삭제 후 새로운 파일 저장"""
