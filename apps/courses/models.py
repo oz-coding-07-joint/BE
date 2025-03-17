@@ -15,6 +15,9 @@ class Course(BaseModel):
     total_duration = models.SmallIntegerField(default=0)  # 수강기간
     max_students = models.SmallIntegerField(default=0)  # 최대 수강생 수
 
+    def __str__(self):
+        return self.title  # 과정명을 출력
+
     class Meta:
         db_table = "class"
 
@@ -27,6 +30,9 @@ class Lecture(BaseModel):
     introduction = models.CharField(max_length=1000)  # 강의 소개
     learning_objective = models.CharField(max_length=255)  # 학습 목표
     progress_rate = models.DecimalField(max_digits=5, decimal_places=2)  # 강의 진행 상황
+
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"  # 과정명 + 강의명을 출력
 
     def save(self, *args, **kwargs):
         """썸네일 변경 시 기존 썸네일 삭제"""
@@ -51,6 +57,9 @@ class LectureChapter(BaseModel):
     lecture = models.ForeignKey(Lecture, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
     material_url = models.FileField(upload_to=class_lecture_file_path, null=True, blank=True)  # 학습 자료
+
+    def __str__(self):
+        return f"{self.lecture.title} - {self.title}"  # Lecture 제목 + 챕터 제목 출력
 
     def save(self, *args, **kwargs):
         """파일이 변경될 경우 기존 파일 삭제 후 새로운 파일 저장"""
