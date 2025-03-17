@@ -17,6 +17,15 @@ class Assignment(BaseModel):
     file_url = models.FileField(upload_to=assignment_material_path, null=True, blank=True)
 
     def save(self, *args, **kwargs):
+        if self.pk:
+            try:
+                old_instance = Assignment.objects.get(pk=self.pk)
+                # 파일이 존재하고 새 파일이 기존 파일과 다르면 기존 파일 삭제
+                if old_instance.file_url and old_instance.file_url != self.file_url:
+                    delete_file_from_ncp(old_instance.file_url.name)
+            except Assignment.DoesNotExist:
+                pass
+
         if not self.pk and self.file_url:
             temp_file = self.file_url
             self.file_url = None

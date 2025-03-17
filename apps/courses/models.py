@@ -28,6 +28,15 @@ class Lecture(BaseModel):
     learning_objective = models.CharField(max_length=255)  # 학습 목표
     progress_rate = models.DecimalField(max_digits=5, decimal_places=2)  # 강의 진행 상황
 
+    def save(self, *args, **kwargs):
+        """썸네일 변경 시 기존 썸네일 삭제"""
+        if self.pk:
+            old_instance = Lecture.objects.get(pk=self.pk)
+            if old_instance.thumbnail and old_instance.thumbnail != self.thumbnail:
+                delete_file_from_ncp(old_instance.thumbnail.name)  # 기존 파일 삭제
+
+        super().save(*args, **kwargs)  # 새로운 파일 저장
+
     def delete(self, *args, **kwargs):
         """NCP Object Storage에서도 파일 삭제"""
         if self.thumbnail:
@@ -43,10 +52,19 @@ class LectureChapter(BaseModel):
     title = models.CharField(max_length=50)
     material_url = models.FileField(upload_to=class_lecture_file_path, null=True, blank=True)  # 학습 자료
 
+    def save(self, *args, **kwargs):
+        """파일이 변경될 경우 기존 파일 삭제 후 새로운 파일 저장"""
+        if self.pk:  # 기존 객체가 존재하는 경우
+            old_instance = LectureChapter.objects.get(pk=self.pk)
+            if old_instance.material_url and old_instance.material_url != self.material_url:
+                delete_file_from_ncp(old_instance.material_url.name)  # 기존 파일 삭제
+
+        super().save(*args, **kwargs)  # 새로운 파일 저장
+
     def delete(self, *args, **kwargs):
         """NCP Object Storage에서도 파일 삭제"""
         if self.material_url:
-            delete_file_from_ncp(self.material_url.name)  # 파일 삭제 실행
+            delete_file_from_ncp(self.material_url.name)
         super().delete(*args, **kwargs)
 
     class Meta:
@@ -63,6 +81,15 @@ class ChapterVideo(BaseModel):
         if self.video_url:
             return generate_ncp_signed_url(self.video_url)  # Signed URL 생성
         return None
+
+    def save(self, *args, **kwargs):
+        """강의 영상 변경 시 기존 파일 삭제"""
+        if self.pk:
+            old_instance = ChapterVideo.objects.get(pk=self.pk)
+            if old_instance.video_url and old_instance.video_url != self.video_url:
+                delete_file_from_ncp(old_instance.video_url.name)  # 기존 파일 삭제
+
+        super().save(*args, **kwargs)  # 새로운 파일 저장
 
     def delete(self, *args, **kwargs):
         """NCP Object Storage에서도 파일 삭제"""

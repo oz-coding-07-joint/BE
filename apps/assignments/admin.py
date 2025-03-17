@@ -6,14 +6,13 @@ from .models import Assignment, AssignmentComment
 
 @admin.register(Assignment)
 class AssignmentAdmin(BaseModelAdmin):
-    list_display = ("id", "title", "file_url", "chapter_video", "created_at", "updated_at")
+    list_display = ("title", "file_url", "chapter_video", "created_at", "updated_at")
     search_fields = ("title", "content")
 
 
 @admin.register(AssignmentComment)
 class AssignmentCommentAdmin(BaseModelAdmin):
     list_display = (
-        "id",
         "assignment_title",
         "user_nickname",
         "user",

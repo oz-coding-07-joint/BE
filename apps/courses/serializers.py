@@ -1,3 +1,6 @@
+import os
+import re
+
 from rest_framework import serializers
 
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
@@ -59,10 +62,33 @@ class LectureChapterSerializer(serializers.ModelSerializer):
     """챕터 목록 조회 Serializer (챕터 내 강의 영상 제목 포함)"""
 
     chapter_video_titles = ChapterVideoTitleSerializer(many=True, source="chaptervideo_set")
+    material_info = serializers.SerializerMethodField()  # material_url과 원래 파일명 반환
 
     class Meta:
         model = LectureChapter
-        fields = ["id", "lecture_id", "title", "material_url", "chapter_video_titles"]
+        fields = ["id", "lecture_id", "title", "material_info", "chapter_video_titles"]
+
+    def get_material_info(self, obj):
+        """material_url과 원래 파일명을 반환"""
+        if obj.material_url:
+            file_name = os.path.basename(obj.material_url.name)  # 전체 파일명 추출
+            original_file_name = self.extract_original_filename(file_name)  # UUID 및 접두어 제거
+
+            return {"url": obj.material_url.url, "file_name": original_file_name}
+        return None  # 자료가 없는 경우 None 반환
+
+    def extract_original_filename(self, file_name):
+        """
+        파일명에서 UUID와 접두어(materials_)를 제거하여 원래 파일명만 추출하는 함수
+        예:
+        - "materials_9dbfa93c-9936-4d48-8732-54dbb25961c6_공주.png" → "공주.png"
+        - "videos_5d6f8e0b-7843-4e47-b4f7-828b7f56a0d2_강의.mp4" → "강의.mp4"
+        """
+        # UUID 패턴: _(UUID)_ (언더스코어 포함)
+        pattern = r"^(materials|videos|thumbnails)?_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}_"
+
+        # 정규식으로 UUID + 접두어 제거
+        return re.sub(pattern, "", file_name)
 
 
 class ProgressTrackingSerializer(serializers.ModelSerializer):
