@@ -90,6 +90,7 @@ class ChapterVideo(BaseModel):
                 delete_file_from_ncp(old_instance.video_url.name)  # 기존 파일 삭제
 
         super().save(*args, **kwargs)  # 새로운 파일 저장
+
     def delete(self, *args, **kwargs):
         """NCP Object Storage에서도 파일 삭제"""
         if self.video_url:

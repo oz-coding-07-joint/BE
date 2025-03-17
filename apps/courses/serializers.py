@@ -74,10 +74,7 @@ class LectureChapterSerializer(serializers.ModelSerializer):
             file_name = os.path.basename(obj.material_url.name)  # 전체 파일명 추출
             original_file_name = self.extract_original_filename(file_name)  # UUID 및 접두어 제거
 
-            return {
-                "url": obj.material_url.url,
-                "file_name": original_file_name
-            }
+            return {"url": obj.material_url.url, "file_name": original_file_name}
         return None  # 자료가 없는 경우 None 반환
 
     def extract_original_filename(self, file_name):
@@ -92,7 +89,6 @@ class LectureChapterSerializer(serializers.ModelSerializer):
 
         # 정규식으로 UUID + 접두어 제거
         return re.sub(pattern, "", file_name)
-
 
 
 class ProgressTrackingSerializer(serializers.ModelSerializer):
