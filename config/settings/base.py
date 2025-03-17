@@ -177,7 +177,7 @@ CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
 
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "https://api.umdoong.shop"]
 CSRF_COOKIE_DOMAIN = ".umdoong.shop"
-SESSION_COOKIE_DOMAIN = ".umdoong.shop"
+SESSION_COOKIE_DOMAIN = os.getenv("SESSION_COOKIE_DOMAIN", ".127.0.0.1")
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
