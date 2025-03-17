@@ -103,31 +103,31 @@ class ProgressTrackingSerializer(serializers.ModelSerializer):
 
 class ProgressTrackingCreateSerializer(serializers.ModelSerializer):
     last_watched_time = serializers.FloatField()
-    progress = serializers.FloatField(read_only=True)  # ✅ progress 추가
+    progress = serializers.FloatField(read_only=True)  # progress 추가
 
     class Meta:
         model = ProgressTracking
-        fields = ["last_watched_time", "progress"]  # ✅ 불필요한 필드 제거
+        fields = ["last_watched_time", "progress"]  # 불필요한 필드 제거
 
     def validate_last_watched_time(self, value):
-        """✅ last_watched_time이 음수값이 되는 것을 방지"""
+        """ last_watched_time이 음수값이 되는 것을 방지"""
         if value < 0:
             raise serializers.ValidationError("last_watched_time은 0보다 작을 수 없습니다.")
         return value
 
     def create(self, validated_data):
-        """✅ student와 chapter_video를 자동 설정"""
+        """ student와 chapter_video를 자동 설정"""
         request = self.context["request"]
-        student = Student.objects.get(user=request.user)  # ✅ 현재 로그인한 사용자의 student 가져오기
+        student = Student.objects.get(user=request.user)  #  현재 로그인한 사용자의 student 가져오기
         chapter_video_id = self.context["chapter_video_id"]
         chapter_video = ChapterVideo.objects.get(id=chapter_video_id)
 
         last_watched_time = validated_data["last_watched_time"]
-        total_duration = request.data.get("total_duration", 1)  # ✅ 프론트엔드에서 제공하는 total_duration 사용
+        total_duration = request.data.get("total_duration", 1)  #  프론트엔드에서 제공하는 total_duration 사용
 
-        # ✅ 진행률(progress) 계산 (음수 방지)
+        #  진행률(progress) 계산 (음수 방지)
         progress = max((last_watched_time / total_duration) * 100, 0) if total_duration > 0 else 0
-        is_completed = progress >= 98  # ✅ 98% 이상이면 완료 처리
+        is_completed = progress >= 98  #  98% 이상이면 완료 처리
 
         tracking = ProgressTracking.objects.create(
             student=student,
@@ -137,7 +137,7 @@ class ProgressTrackingCreateSerializer(serializers.ModelSerializer):
             is_completed=is_completed,
         )
 
-        return tracking  # ✅ 생성된 객체 반환 (progress 값 포함)
+        return tracking  #  생성된 객체 반환 (progress 값 포함)
 
 
 class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
@@ -149,13 +149,13 @@ class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ["progress", "is_completed"]
 
     def validate(self, data):
-        """✅ last_watched_time이 음수값이 되거나 영상 길이를 초과하지 않도록 검증"""
+        """ last_watched_time이 음수값이 되거나 영상 길이를 초과하지 않도록 검증"""
         instance = self.instance
         last_watched_time = data.get("last_watched_time", instance.last_watched_time)
-        total_duration = self.context["request"].data.get("total_duration")  # ✅ 프론트에서 제공
+        total_duration = self.context["request"].data.get("total_duration")  #  프론트에서 제공
 
         if total_duration is None:
-            raise serializers.ValidationError("total_duration 값이 필요합니다.")  # ✅ 필수 값 검증
+            raise serializers.ValidationError("total_duration 값이 필요합니다.")  #  필수 값 검증
 
         if last_watched_time < 0:
             raise serializers.ValidationError("last_watched_time은 0보다 작을 수 없습니다.")
@@ -166,12 +166,12 @@ class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        """✅ 진행률 계산 시 프론트에서 제공한 total_duration 사용"""
+        """ 진행률 계산 시 프론트에서 제공한 total_duration 사용"""
         last_watched_time = validated_data.get("last_watched_time", instance.last_watched_time)
         total_duration = self.context["request"].data.get("total_duration")
 
         progress = (last_watched_time / total_duration) * 100 if total_duration > 0 else 0
-        is_completed = progress >= 98  # ✅ 98% 이상이면 완료 처리
+        is_completed = progress >= 98  #  98% 이상이면 완료 처리
 
         instance.last_watched_time = last_watched_time
         instance.progress = progress

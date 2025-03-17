@@ -39,12 +39,12 @@ def generate_ncp_signed_url(object_name, chapter_video_id, expiration=120):
     )
 
     # Redis 키 설정
-    redis_key = f"signed_url:{chapter_video_id}"  # ✅ chapter_video_id 기반으로 저장
+    redis_key = f"signed_url:{chapter_video_id}"  #  chapter_video_id 기반으로 저장
 
-    # ✅ 기존 Signed URL 즉시 삭제
+    #  기존 Signed URL 즉시 삭제
     redis_client.delete(redis_key)
 
-    # ✅ 새로운 Signed URL 저장 (2분 후 자동 만료)
+    #  새로운 Signed URL 저장 (2분 후 자동 만료)
     redis_client.setex(redis_key, expiration, signed_url)
 
     return signed_url
@@ -84,7 +84,7 @@ def class_lecture_file_path(instance, filename):
     else:
         raise ValueError(f"지원되지 않는 모델 유형입니다: {type(instance).__name__}")
 
-    # ✅ 올바른 경로 반환
+    # 올바른 경로 반환
     return f"classes/{course_id}/lectures/{lecture_id}/{file_type}_{unique_filename}"
 
 

@@ -150,7 +150,7 @@ class ChapterVideoProgressCreateView(APIView):
             chapter_video = ChapterVideo.objects.get(id=chapter_video_id)
 
             serializer = ProgressTrackingCreateSerializer(
-                data=request.data, context={"request": request, "chapter_video_id": chapter_video_id}  # ✅ context 추가
+                data=request.data, context={"request": request, "chapter_video_id": chapter_video_id}  #  context 추가
             )
             serializer.is_valid(raise_exception=True)
             progress_tracking = serializer.save()
@@ -192,7 +192,7 @@ class ChapterVideoProgressUpdateView(APIView):
             serializer = ProgressTrackingUpdateSerializer(
                 progress_tracking,
                 data=request.data,
-                context={"request": request},  # ✅ total_duration을 전달하기 위해 context 추가
+                context={"request": request},  #  total_duration을 전달하기 위해 context 추가
             )
             serializer.is_valid(raise_exception=True)
             progress_tracking = serializer.save()
