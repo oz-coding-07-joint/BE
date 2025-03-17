@@ -32,7 +32,7 @@ class AssignmentView(APIView):
     # 강의 챕터별 과제 목록 조회
     def get(self, request, lecture_chapter_id):
         if lecture_chapter_id <= 0:
-            return Response({"error": "잘못된 lecture_chapter_id 입니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "잘못된 lecture_chapter_id 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         cache_key = f"assignments_{lecture_chapter_id}"
         cached_data = redis_client.get(cache_key)
@@ -44,7 +44,8 @@ class AssignmentView(APIView):
             assignments = Assignment.objects.filter(chapter_video__lecture_chapter__id=lecture_chapter_id)
             serializer = AssignmentSerializer(assignments, many=True)
             assignments_data = serializer.data
-            redis_client.setex(cache_key, 18000, json.dumps(assignments_data))
+            CACHE_TIMEOUT = 5 * 3600
+            redis_client.setex(cache_key, CACHE_TIMEOUT, json.dumps(assignments_data))
 
         return Response(
             {"lecture_chapter_id": lecture_chapter_id, "assignments": assignments_data},
