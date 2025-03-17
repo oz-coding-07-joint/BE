@@ -36,9 +36,9 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest .
+          docker build -t ${{ secrets.DOCKERHUB_NAME }}/oz_joint_prod:latest .
           docker build -t ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest ./resources/nginx
-          docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
+          docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_prod:latest
           docker push ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
 
       - name: Deploy to Server NCP
@@ -50,7 +50,7 @@ jobs:
           script: |
             docker image prune -a --filter "until=24h"
             cd app
-            docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_dev:latest
+            docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_prod:latest
             docker pull ${{ secrets.DOCKERHUB_NAME }}/oz_joint_nginx:latest
-            docker-compose --env-file .envs/.dev.env up -d --build
+            docker-compose --env-file .envs/.prod.env up -d --build
             docker ps

@@ -260,7 +260,7 @@ class LoginView(APIView):
         user_data = User.objects.get(email=email)
         serializer = UserSerializer(user_data)
 
-        response = Response({"user": serializer.data}, status=status.HTTP_200_OK)
+        response = Response({"access": access_token, "user": serializer.data}, status=status.HTTP_200_OK)
         response.set_cookie(
             "refresh_token",  # 쿠키 이름
             value=str(refresh),  # 쿠키 값
@@ -268,14 +268,6 @@ class LoginView(APIView):
             secure=settings.REFRESH_TOKEN_COOKIE_SECURE,  # HTTPS 환경에서만 쿠키를 전송(dev[F], prod[T]로 관리)
             samesite="Lax",  # CSRF 공격 방지
             max_age=5 * 60 * 60,  # 쿠키 만료 시간 5시간
-        )
-        response.set_cookie(
-            "access_token",
-            value=str(access_token),
-            httponly=True,
-            secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
-            samesite="Lax",
-            max_age=15 * 60,  # 15분
         )
         return response
 
@@ -289,7 +281,7 @@ class TokenRefreshView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
-            return Response({"Refresh token 이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"Refresh token이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             # 기존 리프레쉬 토큰 검증
@@ -307,7 +299,7 @@ class TokenRefreshView(APIView):
             new_access_token = str(new_refresh.access_token)
 
             # body 에 access token 만 포함한 응답 생성
-            response = Response({"detail": "토큰 재발급 완료"}, status=status.HTTP_200_OK)
+            response = Response({"access": new_access_token}, status=status.HTTP_200_OK)
 
             # 새 refresh token 을 쿠키에 설정
             response.set_cookie(
@@ -317,14 +309,6 @@ class TokenRefreshView(APIView):
                 secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
                 samesite="Lax",
                 max_age=5 * 60 * 60,
-            )
-            response.set_cookie(
-                key="access_token",
-                value=str(new_access_token),
-                httponly=True,
-                secure=settings.REFRESH_TOKEN_COOKIE_SECURE,
-                samesite="Lax",
-                max_age=15 * 60,
             )
             return response
         except Exception:
@@ -372,7 +356,6 @@ class LogoutView(APIView):
 
         response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_200_OK)
         response.delete_cookie("refresh_token")
-        response.delete_cookie("access_token")
         return response
 
 
