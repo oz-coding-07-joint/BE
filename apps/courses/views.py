@@ -1,6 +1,5 @@
 import json
 
-from django.http import HttpResponseForbidden
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -212,14 +211,14 @@ class ChapterVideoProgressUpdateView(APIView):
 
 class ChapterVideoDetailView(APIView):
     """
-    강의 영상 상세 조회 (chapter_video)
+    강의 영상 상세 조회 (chapter_video) - S3 Pre-signed URL 적용
     """
 
     permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
-        summary="강의 영상 상세 조회",
-        description="특정 강의 영상의 상세 정보를 조회합니다. 영상을 처음 조회하면 자동으로 진행 데이터를 생성합니다.",
+        summary="강의 영상 상세 조회 (S3 Pre-signed URL)",
+        description="특정 강의 영상의 상세 정보를 조회합니다. 일정 시간 동안 접근 가능한 Signed URL을 반환합니다.",
         responses={
             200: ChapterVideoSerializer,
             404: OpenApiResponse(description="해당 강의 영상을 찾을 수 없음"),
@@ -232,29 +231,27 @@ class ChapterVideoDetailView(APIView):
             student = Student.objects.get(user=request.user)
             video = ChapterVideo.objects.get(id=chapter_video_id)
 
-            # Redis에서 기존 Signed URL 삭제 (즉시 무효화)
-            redis_key = f"signed_url:{chapter_video_id}"
-            redis_client.delete(redis_key)
+            # Referrer 확인 (일부 요청에는 HTTP_REFERER가 없을 수 있음)
+            allowed_referrers = [
+                "https://umdoong.shop",
+                "https://api.umdoong.shop",
+                "http://localhost:8000",
+                "http://localhost:3000",
+                "http://127.0.0.1:8000",
+                "http://127.0.0.1:3000",
+            ]
+            referrer = request.META.get("HTTP_REFERER", "")
 
-            # 새로운 Signed URL 생성 (2분 만료)
-            signed_url = generate_ncp_signed_url(video.video_url, chapter_video_id, expiration=120)
+            if referrer and not any(referrer.startswith(allowed) for allowed in allowed_referrers):
+                return Response({"error": "잘못된 접근입니다."}, status=status.HTTP_403_FORBIDDEN)
 
-            # 진행 데이터 생성 또는 조회
-            progress_tracking, created = ProgressTracking.objects.get_or_create(
-                student=student,
-                chapter_video=video,
-                defaults={"last_watched_time": 0, "progress": 0, "is_completed": False},
-            )
+            # 사용자 인증 기반 Signed URL 생성
+            signed_url = generate_ncp_signed_url(video.video_url.name, student.id)
 
             response_data = {
                 "id": video.id,
                 "title": video.title,
-                "video_url": signed_url,  #  항상 새로운 URL 제공
-                "progress": {
-                    "last_watched_time": progress_tracking.last_watched_time,
-                    "progress": progress_tracking.progress,
-                    "is_completed": progress_tracking.is_completed,
-                },
+                "video_url": signed_url,
             }
             return Response(response_data, status=status.HTTP_200_OK)
 

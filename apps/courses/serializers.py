@@ -1,6 +1,7 @@
 import os
 import re
 
+import boto3
 from rest_framework import serializers
 
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
@@ -110,13 +111,13 @@ class ProgressTrackingCreateSerializer(serializers.ModelSerializer):
         fields = ["last_watched_time", "progress"]  # 불필요한 필드 제거
 
     def validate_last_watched_time(self, value):
-        """ last_watched_time이 음수값이 되는 것을 방지"""
+        """last_watched_time이 음수값이 되는 것을 방지"""
         if value < 0:
             raise serializers.ValidationError("last_watched_time은 0보다 작을 수 없습니다.")
         return value
 
     def create(self, validated_data):
-        """ student와 chapter_video를 자동 설정"""
+        """student와 chapter_video를 자동 설정"""
         request = self.context["request"]
         student = Student.objects.get(user=request.user)  #  현재 로그인한 사용자의 student 가져오기
         chapter_video_id = self.context["chapter_video_id"]
@@ -149,7 +150,7 @@ class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ["progress", "is_completed"]
 
     def validate(self, data):
-        """ last_watched_time이 음수값이 되거나 영상 길이를 초과하지 않도록 검증"""
+        """last_watched_time이 음수값이 되거나 영상 길이를 초과하지 않도록 검증"""
         instance = self.instance
         last_watched_time = data.get("last_watched_time", instance.last_watched_time)
         total_duration = self.context["request"].data.get("total_duration")  #  프론트에서 제공
@@ -166,7 +167,7 @@ class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        """ 진행률 계산 시 프론트에서 제공한 total_duration 사용"""
+        """진행률 계산 시 프론트에서 제공한 total_duration 사용"""
         last_watched_time = validated_data.get("last_watched_time", instance.last_watched_time)
         total_duration = self.context["request"].data.get("total_duration")
 
@@ -189,11 +190,26 @@ class ChapterVideoSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "video_url"]
 
     def get_video_url(self, obj):
-        """NCP Object Storage에서 직접 접근 가능한 URL 반환"""
-        if obj.video_url:  # video_url 필드가 이미 존재하는 경우 직접 반환
-            return obj.video_url
+        """Signed URL을 반환하여 인증된 사용자만 접근 가능하게 변경"""
+        if not obj.video_url:
+            return None
 
-        if obj.video_file:  # video_file이 존재하면 S3 URL을 생성
-            return f"https://{base.AWS_STORAGE_BUCKET_NAME}.kr.object.ncloudstorage.com/{obj.video_file.name}"
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=base.AWS_S3_ENDPOINT_URL,
+            aws_access_key_id=base.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=base.AWS_SECRET_ACCESS_KEY,
+            region_name=base.AWS_S3_REGION_NAME,
+        )
 
-        return None
+        bucket_name = base.AWS_STORAGE_BUCKET_NAME
+        object_key = obj.video_url.name
+
+        # Signed URL 생성 (2분 유효)
+        url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket_name, "Key": object_key},
+            ExpiresIn=120,  # 2분 후 만료
+            HttpMethod="GET",
+        )
+        return url
