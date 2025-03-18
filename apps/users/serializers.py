@@ -78,10 +78,17 @@ class SignupSerializer(serializers.ModelSerializer):
                 user.set_password(password)
             user.save()
 
-            terms_agreements = [TermsAgreement(user=user, **terms) for terms in terms_data]
+            # 약관 동의 중복을 방지하기 위한 조건
+            existing_terms = TermsAgreement.objects.filter(user=user)
+            new_terms = [
+                TermsAgreement(user=user, **terms)
+                for terms in terms_data
+                if not existing_terms.filter(**terms).exists()  # 이미 동의한 약관은 제외
+            ]
 
-            # bulk_create는 여러 개의 데이터를 한 번에 insert해준다
-            TermsAgreement.objects.bulk_create(terms_agreements)
+            # 새 약관이 있다면 저장
+            if new_terms:
+                TermsAgreement.objects.bulk_create(new_terms)
 
         return user
 
