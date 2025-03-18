@@ -135,8 +135,21 @@ class ChapterVideoProgressCreateView(APIView):
 
     @extend_schema(
         summary="강의 영상 학습 진행률 생성",
-        description="특정 강의 영상(chapter_video)에 대한 학습 진행 데이터를 생성합니다.",
-        request=ProgressTrackingCreateSerializer,
+        description=(
+            "** 강의 영상을 학습한 기록을 저장합니다.**\n\n"
+            "- `last_watched_time` : 사용자가 마지막으로 시청한 시간 (초 단위)\n"
+            "- `total_duration` : 전체 영상 길이 (초 단위, 프론트엔드 제공)\n"
+            "- `progress`는 자동 계산되며, 999.99 이상이면 최대 99.99로 제한됩니다.\n"
+            "- `is_completed`는 98% 이상이면 자동으로 `True` 처리됩니다.\n"
+        ),
+        request={
+            "application/json": {
+                "example": {
+                    "last_watched_time": 120,  # 사용자가 마지막으로 본 위치 (초 단위)
+                    "total_duration": 600  # 영상 전체 길이 (초 단위, 프론트에서 제공해야 함)
+                }
+            }
+        },
         responses={
             201: ProgressTrackingSerializer,
             400: OpenApiResponse(description="잘못된 요청 데이터"),
