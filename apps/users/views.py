@@ -217,11 +217,12 @@ class SignUpView(APIView):
                 with transaction.atomic():
                     user = serializer.save()
                     user.refresh_from_db()  # db에 바로 적용이 안되어 id가 orm으로 안 가져와질 수 있으므로 refresh
-                    Student.objects.create(user=user)
-                    user.refresh_from_db()
+                    if not Student.objects.filter(user=user).exists():
+                        Student.objects.create(user=user)
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
                 return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+
             except Exception:
                 return Response({"error": "회원가입 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
