@@ -85,10 +85,14 @@ class ChapterVideo(BaseModel):
     title = models.CharField(max_length=50)
     video_url = models.FileField(upload_to=class_lecture_file_path, null=True, blank=True)  # 강의 영상
 
-    def get_video_url(self):
-        """NCP Object Storage에서 서명된 URL 반환"""
+    def get_video_url(self, user_id=None):
+        """
+        강의 영상의 Signed URL을 반환
+        :param user_id: 현재 요청한 사용자 ID (보안 강화를 위해 추가)
+        :return: Signed URL 또는 None
+        """
         if self.video_url:
-            return generate_ncp_signed_url(self.video_url)  # Signed URL 생성
+            return generate_ncp_signed_url(self.video_url.name, user_id=user_id)
         return None
 
     def save(self, *args, **kwargs):
