@@ -5,9 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
-from apps.common.utils import redis_client
-
-from ..terms.models import Terms, TermsAgreement
+from ..terms.models import TermsAgreement
 from ..terms.serializers import TermsAgreementSerializer
 from .models import User
 from .utils import (
