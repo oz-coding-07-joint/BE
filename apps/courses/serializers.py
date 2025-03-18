@@ -96,6 +96,7 @@ class ProgressTrackingSerializer(serializers.ModelSerializer):
     """강의 영상 학습 진행률 조회 Serializer"""
 
     student_id = serializers.PrimaryKeyRelatedField(source="student.id", read_only=True)
+    progress = serializers.DecimalField(max_digits=5, decimal_places=2)
 
     class Meta:
         model = ProgressTracking
@@ -181,7 +182,6 @@ class ProgressTrackingUpdateSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-
 
 
 class ChapterVideoSerializer(serializers.ModelSerializer):

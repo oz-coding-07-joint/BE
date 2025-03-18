@@ -7,6 +7,11 @@ urlpatterns = [
     path("lecture/<lecture_id>/", views.LectureDetailView.as_view()),
     path("lecture_chapter/<lecture_id>/", views.LectureChapterListView.as_view()),
     path(
+        "chapter_video/<chapter_video_id>/state/",
+        views.ChapterVideoProgressRetrieveView.as_view(),
+        name="chapter_video_state",
+    ),
+    path(
         "chapter_video/<chapter_video_id>/progress/",
         views.ChapterVideoProgressCreateView.as_view(),
         name="chapter-video-progress-create",

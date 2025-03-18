@@ -1,7 +1,9 @@
 import json
 
-from drf_spectacular.utils import OpenApiParameter, OpenApiTypes
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import (
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -128,6 +130,47 @@ class LectureChapterListView(APIView):
             )
 
 
+class ChapterVideoProgressRetrieveView(APIView):
+    """강의 영상 학습 진행률 조회 API (GET)"""
+
+    permission_classes = [IsEnrolledStudent]
+
+    @extend_schema(
+        summary="강의 영상 학습 진행률 조회",
+        description=(
+            "** 특정 강의 영상(chapter_video)에 대한 학생의 학습 진행률을 조회합니다.**\n\n"
+            "- `progress`: 영상 학습 진행률 (%)\n"
+            "- `is_completed`: 영상 학습 완료 여부 (98% 이상이면 True)\n"
+            "- `student_id`: 진행률을 조회하는 학생의 ID"
+        ),
+        responses={
+            200: ProgressTrackingSerializer,
+            403: OpenApiResponse(description="권한 없음 (로그인 필요)"),
+            404: OpenApiResponse(description="진행 데이터를 찾을 수 없음"),
+            500: OpenApiResponse(description="서버 내부 오류"),
+        },
+        tags=["Course"],
+    )
+    def get(self, request, chapter_video_id):
+        try:
+            student = Student.objects.get(user=request.user)
+            progress_tracking = ProgressTracking.objects.get(student=student, chapter_video_id=chapter_video_id)
+
+            return Response(ProgressTrackingSerializer(progress_tracking).data, status=status.HTTP_200_OK)
+
+        except ProgressTracking.DoesNotExist:
+            return Response(
+                {"error": "이 강의 영상에 대한 학습 기록이 없습니다. 학습을 시작하세요."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Student.DoesNotExist:
+            return Response({"error": "학생 정보가 등록되지 않았습니다."}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response(
+                {"error": "서버 내부 오류", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
 class ChapterVideoProgressCreateView(APIView):
     """강의 영상 학습 진행률 생성 API (POST)"""
 
@@ -146,7 +189,7 @@ class ChapterVideoProgressCreateView(APIView):
             "application/json": {
                 "example": {
                     "last_watched_time": 120,  # 사용자가 마지막으로 본 위치 (초 단위)
-                    "total_duration": 600  # 영상 전체 길이 (초 단위, 프론트에서 제공해야 함)
+                    "total_duration": 600,  # 영상 전체 길이 (초 단위, 프론트에서 제공해야 함)
                 }
             }
         },
@@ -197,7 +240,7 @@ class ChapterVideoProgressUpdateView(APIView):
             "application/json": {
                 "example": {
                     "last_watched_time": 120,  # 사용자가 마지막으로 시청한 시간 (초 단위)
-                    "total_duration": 600  # 영상 전체 길이 (초 단위, 프론트엔드 제공)
+                    "total_duration": 600,  # 영상 전체 길이 (초 단위, 프론트엔드 제공)
                 }
             }
         },
