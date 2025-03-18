@@ -4,7 +4,7 @@ from .base import *
 
 DEBUG = True
 
-REFRESH_TOKEN_COOKIE_SECURE = True
+REFRESH_TOKEN_COOKIE_SECURE = False
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost").split(",")  # 허용할 host
 

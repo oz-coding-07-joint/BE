@@ -216,11 +216,12 @@ class SignUpView(APIView):
                 with transaction.atomic():
                     user = serializer.save()
                     user.refresh_from_db()  # db에 바로 적용이 안되어 id가 orm으로 안 가져와질 수 있으므로 refresh
-                    Student.objects.create(user=user)
-                    user.refresh_from_db()
+                    if not Student.objects.filter(user=user).exists():
+                        Student.objects.create(user=user)
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
                 return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+
             except Exception:
                 return Response({"error": "회원가입 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -411,7 +412,24 @@ class MyinfoView(APIView):
         tags=["User"],
     )
     def patch(self, request):
-        return
+        user = request.user
+        if (
+            user.email == request.user.email
+            and user.name == request.user.name
+            and user.phone_number == request.user.phone_number
+        ):
+            return Response({"error": "변경사항이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UpdateMyPageSerializer(user, data=request.data, partial=True, context={"request": request})
+
+        if serializer.is_valid():
+            serializer.save()
+            email = serializer.validated_data["email"]
+            if email:
+                redis_client.delete(RedisKeys.get_verified_email_key(email))
+            return Response({"detail": "회원 정보 변경이 완료되었습니다."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):
@@ -426,4 +444,14 @@ class ChangePasswordView(APIView):
         tags=["User"],
     )
     def patch(self, request):
-        return
+        user = request.user
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+
+        if serializer.is_valid():
+            new_password = serializer.validated_data["new_password"]
+            user.set_password(new_password)
+            user.save()
+
+            return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
