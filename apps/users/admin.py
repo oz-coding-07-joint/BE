@@ -13,11 +13,11 @@ from .models import Instructor, Student, User
 @admin.register(User)
 class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
     # 표시할 컬럼
-    list_display = ("email", "nickname", "is_staff", "is_active", "is_superuser", "deleted_at")
+    list_display = ("email", "nickname", "provider", "is_staff", "is_active", "is_superuser", "deleted_at")
     # 검색 기능 설정
     search_fields = ("email", "nickname")
     # 필터링 조건
-    list_filter = ("is_active", "is_staff", "is_superuser", "deleted_at")
+    list_filter = ("provider", "is_active", "is_staff", "is_superuser", "deleted_at")
     actions = ["delete_instructor"]
 
     def get_form(self, request, obj=None, **kwargs):
