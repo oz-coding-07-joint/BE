@@ -1,5 +1,6 @@
 import json
 
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -173,8 +174,20 @@ class ChapterVideoProgressUpdateView(APIView):
 
     @extend_schema(
         summary="강의 영상 학습 진행률 업데이트",
-        description="특정 강의 영상(chapter_video)의 학습 진행률을 수정합니다. total_duration 값은 프론트에서 제공해야 합니다.",
-        request=ProgressTrackingUpdateSerializer,
+        description=(
+            "특정 강의 영상(chapter_video)의 학습 진행률을 수정합니다.\n\n"
+            "** 주의:**\n"
+            "- `total_duration` 값은 **프론트엔드에서 제공 합니다.**\n"
+            "- `total_duration`은 백엔드에서 저장되지 않으며, `progress` 및 `is_completed` 계산을 위해 사용됩니다."
+        ),
+        request={
+            "application/json": {
+                "example": {
+                    "last_watched_time": 120,  # 사용자가 마지막으로 시청한 시간 (초 단위)
+                    "total_duration": 600  # 영상 전체 길이 (초 단위, 프론트엔드 제공)
+                }
+            }
+        },
         responses={
             200: ProgressTrackingSerializer,
             400: OpenApiResponse(description="잘못된 요청 데이터"),
