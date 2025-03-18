@@ -411,7 +411,24 @@ class MyinfoView(APIView):
         tags=["User"],
     )
     def patch(self, request):
-        return
+        user = request.user
+        if (
+            user.email == request.user.email
+            and user.name == request.user.name
+            and user.phone_number == request.user.phone_number
+        ):
+            return Response({"error": "변경사항이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UpdateMyPageSerializer(user, data=request.data, partial=True, context={"request": request})
+
+        if serializer.is_valid():
+            serializer.save()
+            email = serializer.validated_data["email"]
+            if email:
+                redis_client.delete(RedisKeys.get_verified_email_key(email))
+            return Response({"detail": "회원 정보 변경이 완료되었습니다."}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):

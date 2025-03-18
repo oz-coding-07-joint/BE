@@ -135,9 +135,35 @@ class SocialProfileSerializer(serializers.ModelSerializer):
 
 
 class UpdateMyPageSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=False)
+    name = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=False)
+
     class Meta:
         model = User
-        fields = ("name", "email", "phone_number")
+        fields = ("email", "name", "phone_number")
+
+    def validate_email(self, email):
+        if self.instance.email == email:
+            return email
+        return validate_user_email(email)
+
+    def validate_phone_number(self, phone_number):
+        if self.instance.phone_number == phone_number:
+            return phone_number
+        return validate_user_phone_number(phone_number)
+
+    def update(self, instance, validated_data):
+        email = validated_data.get("email", instance.email)
+        name = validated_data.get("name", instance.name)
+        phone_number = validated_data.get("phone_number", instance.phone_number)
+
+        instance.email = email
+        instance.name = name
+        instance.phone_number = phone_number
+
+        instance.save()
+        return instance
 
 
 class ChangePasswordSerializer(serializers.Serializer[User]):
