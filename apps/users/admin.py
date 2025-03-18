@@ -1,7 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django_softdelete.admin import GlobalObjectsModelAdmin
+from django_softdelete.models import SoftDeleteModel
 
 from apps.common.admin import BaseModelAdmin
 
@@ -12,11 +13,12 @@ from .models import Instructor, Student, User
 @admin.register(User)
 class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
     # 표시할 컬럼
-    list_display = ("email", "nickname", "is_staff", "is_active", "is_superuser", "deleted_at")
+    list_display = ("email", "nickname", "provider", "is_staff", "is_active", "is_superuser", "deleted_at")
     # 검색 기능 설정
     search_fields = ("email", "nickname")
     # 필터링 조건
-    list_filter = ("is_active", "is_staff", "is_superuser", "deleted_at")
+    list_filter = ("provider", "is_active", "is_staff", "is_superuser", "deleted_at")
+    actions = ["delete_instructor"]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -49,6 +51,13 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
+
+    def delete_model(self, request, obj):
+        count = 0
+        if isinstance(obj, SoftDeleteModel):
+            obj.hard_delete()
+            count += 1
+        messages.success(request, f"{count}개 항목이 영구 삭제되었습니다.")
 
 
 @admin.register(Student)
