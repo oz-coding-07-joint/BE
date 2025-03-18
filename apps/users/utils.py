@@ -40,14 +40,14 @@ def validate_signup_terms_agreements(value):
     return value
 
 
-def validate_signup_email(email):
+def validate_user_email(email):
     # 이메일이 인증되었는지 2차 확인
     if not redis_client.get(f"verified_email_{email}"):
         raise serializers.ValidationError("이메일 인증을 먼저 완료해야 합니다.")
     return email
 
 
-def validate_signup_password(password):
+def validate_user_password(password):
     if not re.search(r"[a-zA-Z]", password) or not re.search(r"[!@#$%^&*()]", password):
         raise serializers.ValidationError("비밀번호는 8자 이상의 영문, 숫자, 특수문자[!@#$%^&*()]를 포함해야 합니다.")
 
@@ -59,7 +59,7 @@ def validate_signup_password(password):
     return password
 
 
-def validate_signup_phone_number(phone_number):
+def validate_user_phone_number(phone_number):
     """휴대폰 번호가 숫자인지 확인"""
     if not phone_number.isdigit():
         raise serializers.ValidationError("휴대폰 번호는 숫자만 입력해야 합니다.")

@@ -11,10 +11,10 @@ from ..terms.models import Terms, TermsAgreement
 from ..terms.serializers import TermsAgreementSerializer
 from .models import User
 from .utils import (
-    validate_signup_email,
-    validate_signup_password,
-    validate_signup_phone_number,
     validate_signup_terms_agreements,
+    validate_user_email,
+    validate_user_password,
+    validate_user_phone_number,
 )
 
 
@@ -52,13 +52,13 @@ class SignupSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate_email(self, email):
-        return validate_signup_email(email)
+        return validate_user_email(email)
 
     def validate_password(self, password):
-        return validate_signup_password(password)
+        return validate_user_password(password)
 
     def validate_phone_number(self, phone_number):
-        return validate_signup_phone_number(phone_number)
+        return validate_user_phone_number(phone_number)
 
     def validate_terms_agreements(self, value):
         return validate_signup_terms_agreements(value)
