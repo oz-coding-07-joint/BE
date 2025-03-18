@@ -427,26 +427,13 @@ class ChangePasswordView(APIView):
     )
     def patch(self, request):
         user = request.user
-        old_password = request.data.get("old_password")
-        new_password = request.data.get("new_password")
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
 
-        # 현재 비밀번호가 맞는지 확인
-        # check_password method: 사용자가 입력된 비밀번호와 db에 저장된 해시화 비밀번호를 비교하여 일치하는지 확인
-        if not user.check_password(old_password):
-            raise AuthenticationFailed("현재 비밀번호가 일치하지 않습니다.")
-        
-        if old_password == new_password:
-            return Response({"error": "이전 비밀번호와 같게 설정할 수 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            validate_signup_password(new_password)  # 비밀번호 유효성 검사
-        except ValueError as e:
-            raise ParseError("새 비밀번호가 유효하지 않습니다. " + str(e))
-        except Exception:
-            return Response({"error": "예상치 못한 에러가 발생했습니다. 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid():
+            new_password = serializer.validated_data["new_password"]
+            user.set_password(new_password)
+            user.save()
 
-        user.set_password(new_password)
-        user.save()
-        return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+            return Response({"detail": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
 
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

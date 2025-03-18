@@ -143,3 +143,21 @@ class UpdateMyPageSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer[User]):
     old_password = serializers.CharField(help_text="현재 비밀번호", write_only=True)
     new_password = serializers.CharField(help_text="새 비밀번호", write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user  # 요청에서 사용자 정보 가져오기
+        if not user.check_password(value):
+            raise serializers.ValidationError("현재 비밀번호가 일치하지 않습니다.")
+        return value
+
+    def validate_new_password(self, value):
+        old_password = self.initial_data.get("old_password")
+        if old_password == value:
+            raise serializers.ValidationError("이전 비밀번호와 같게 설정할 수 없습니다.")
+
+        try:
+            validate_user_password(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+
+        return value
