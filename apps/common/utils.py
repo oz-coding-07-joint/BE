@@ -1,9 +1,4 @@
-import base64
-import hashlib
-import hmac
 import os
-import time
-import urllib.parse
 import uuid
 
 import boto3
@@ -11,41 +6,39 @@ import redis
 from django.conf import settings
 
 
-def generate_ncp_signed_url(object_name, chapter_video_id, expiration=120):
+def generate_ncp_signed_url(object_key, expiration=120):
     """
-    NCP Object Storage에서 Signed URL을 생성하는 함수.
-    expiration: URL 만료 시간 (초) (기본값 2분)
+    NCP Object Storage용 Signed URL 생성 함수
+
+    :param object_key: 접근하려는 파일의 경로
+    :param expiration: Signed URL 유효 시간 (초 단위)
+    :return: Signed URL (유효 시간 동안만 접근 가능)
     """
-    access_key = os.getenv("NCP_ACCESS_KEY_ID")
-    secret_key = os.getenv("NCP_SECRET_ACCESS_KEY")
-    bucket_name = os.getenv("NCP_BUCKET_NAME")
-    endpoint = "https://kr.object.ncloudstorage.com"
+    if not object_key:
+        return None
 
-    if not all([access_key, secret_key, bucket_name]):
-        raise ValueError("NCP Object Storage 설정값이 없습니다.")
-
-    # 만료 시간 설정 (Unix Timestamp)
-    expires = int(time.time()) + expiration
-
-    # 서명 생성
-    string_to_sign = f"GET\n\n\n{expires}\n/{bucket_name}/{object_name}"
-    signature = base64.b64encode(
-        hmac.new(secret_key.encode("utf-8"), string_to_sign.encode("utf-8"), hashlib.sha1).digest()
-    ).decode("utf-8")
-
-    # Signed URL 생성
-    signed_url = f"{endpoint}/{bucket_name}/{object_name}?" + urllib.parse.urlencode(
-        {"AWSAccessKeyId": access_key, "Expires": expires, "Signature": signature}
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
     )
 
-    # Redis 키 설정
-    redis_key = f"signed_url:{chapter_video_id}"  # ✅ chapter_video_id 기반으로 저장
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
-    # ✅ 기존 Signed URL 즉시 삭제
-    redis_client.delete(redis_key)
-
-    # ✅ 새로운 Signed URL 저장 (2분 후 자동 만료)
-    redis_client.setex(redis_key, expiration, signed_url)
+    # Signed URL 생성
+    signed_url = s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": bucket_name,
+            "Key": object_key,
+            "ResponseContentType": "video/mp4",  # 파일 유형 설정 (필요시)
+            "ResponseCacheControl": "no-cache",  # 캐시 방지
+        },
+        ExpiresIn=expiration,
+        HttpMethod="GET",
+    )
 
     return signed_url
 
@@ -84,7 +77,7 @@ def class_lecture_file_path(instance, filename):
     else:
         raise ValueError(f"지원되지 않는 모델 유형입니다: {type(instance).__name__}")
 
-    # ✅ 올바른 경로 반환
+    # 올바른 경로 반환
     return f"classes/{course_id}/lectures/{lecture_id}/{file_type}_{unique_filename}"
 
 
