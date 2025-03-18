@@ -27,6 +27,7 @@ from .serializers import (
     UserSerializer,
     VerifyEmailCodeSerializer,
 )
+from .utils import validate_user_password
 
 
 class RedisKeys:
