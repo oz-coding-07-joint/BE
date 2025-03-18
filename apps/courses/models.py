@@ -15,6 +15,9 @@ class Course(BaseModel):
     total_duration = models.SmallIntegerField(default=0)  # 수강기간
     max_students = models.SmallIntegerField(default=0)  # 최대 수강생 수
 
+    def __str__(self):
+        return self.title  # 과정명을 출력
+
     class Meta:
         db_table = "class"
 
@@ -27,6 +30,9 @@ class Lecture(BaseModel):
     introduction = models.CharField(max_length=1000)  # 강의 소개
     learning_objective = models.CharField(max_length=255)  # 학습 목표
     progress_rate = models.DecimalField(max_digits=5, decimal_places=2)  # 강의 진행 상황
+
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"  # 과정명 + 강의명을 출력
 
     def save(self, *args, **kwargs):
         """썸네일 변경 시 기존 썸네일 삭제"""
@@ -52,6 +58,9 @@ class LectureChapter(BaseModel):
     title = models.CharField(max_length=50)
     material_url = models.FileField(upload_to=class_lecture_file_path, null=True, blank=True)  # 학습 자료
 
+    def __str__(self):
+        return f"{self.lecture.title} - {self.title}"  # Lecture 제목 + 챕터 제목 출력
+
     def save(self, *args, **kwargs):
         """파일이 변경될 경우 기존 파일 삭제 후 새로운 파일 저장"""
         if self.pk:  # 기존 객체가 존재하는 경우
@@ -76,10 +85,14 @@ class ChapterVideo(BaseModel):
     title = models.CharField(max_length=50)
     video_url = models.FileField(upload_to=class_lecture_file_path, null=True, blank=True)  # 강의 영상
 
-    def get_video_url(self):
-        """NCP Object Storage에서 서명된 URL 반환"""
+    def get_video_url(self, user_id=None):
+        """
+        강의 영상의 Signed URL을 반환
+        :param user_id: 현재 요청한 사용자 ID (보안 강화를 위해 추가)
+        :return: Signed URL 또는 None
+        """
         if self.video_url:
-            return generate_ncp_signed_url(self.video_url)  # Signed URL 생성
+            return generate_ncp_signed_url(self.video_url.name, user_id=user_id)
         return None
 
     def save(self, *args, **kwargs):
