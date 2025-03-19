@@ -1,6 +1,9 @@
 import random
 import smtplib
 
+import requests
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.socialaccount.models import SocialAccount
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
@@ -18,11 +21,10 @@ from config.settings.base import EMAIL_HOST_USER
 from .models import Student, User
 from .serializers import (
     ChangePasswordSerializer,
-    KakaoLoginSerializer,
     LoginSerializer,
     SendEmailVerificationCodeSerializer,
     SignupSerializer,
-    SocialProfileSerializer,
+    SocialLoginSerializer,
     UpdateMyPageSerializer,
     UserSerializer,
     VerifyEmailCodeSerializer,
@@ -316,23 +318,50 @@ class TokenRefreshView(APIView):
             return Response({"detail": "잘못된 refresh token 입니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
-class KakaoLoginView(APIView):
+class SocialSignupCompleteView(APIView):
+    """
+    소셜로그인 추가 정보 받는 API
+    """
 
-    @extend_schema(summary="카카오 로그인", description="카카오 소셜 로그인입니다", tags=["User"])
-    def post(self, request):
-        return
-
-
-class SocialProfileCreate(APIView):
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
 
     @extend_schema(
-        summary="소셜 로그인 시 프로필 생성",
-        description="name, nickname, phone_number를 팝업창에서 입력할 때 사용하는 API입니다",
-        request=SocialProfileSerializer,
+        summary="소셜 로그인 후 추가 정보 입력",
+        description="소셜 로그인 후 부족한 정보를 입력하여 계정을 활성화합니다.",
+        request=SocialLoginSerializer,
         tags=["User"],
     )
     def post(self, request):
-        return
+        email = request.data.get("email")
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "존재하지 않는 계정입니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 소셜 로그인 유저인지 확인
+        if not SocialAccount.objects.filter(user=user).exists():
+            return Response({"error": "소셜 로그인 유저가 아닙니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_active:
+            return Response({"error": "이미 활성화 된 유저입니다."})
+
+        serializer = SocialLoginSerializer(user, data=request.data)
+        if serializer.is_valid():
+            # try:
+            with transaction.atomic():
+                user = serializer.save()
+                user.is_active = True  # 계정 활성화
+                user.save()
+                user.refresh_from_db()
+                if not Student.objects.filter(user=user).exists():
+                    Student.objects.create(user=user)
+            return Response({"message": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+
+        #             except Exception as e:
+        #                 return Response({"error": f"추가 정보 입력 중 오류 발생{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -413,11 +442,12 @@ class MyinfoView(APIView):
     )
     def patch(self, request):
         user = request.user
-        if (
-            user.email == request.user.email
-            and user.name == request.user.name
-            and user.phone_number == request.user.phone_number
-        ):
+        ori_user = User.objects.filter(id=user.pk).first()
+        # 요청된 데이터 중 비교할 필드만 선택
+        update_fields = {key: value for key, value in request.data.items() if key in ["email", "name", "phone_number"]}
+
+        # 변경 사항 확인
+        if all(getattr(ori_user, field) == update_fields[field] for field in update_fields):
             return Response({"error": "변경사항이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = UpdateMyPageSerializer(user, data=request.data, partial=True, context={"request": request})
