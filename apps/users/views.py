@@ -445,7 +445,7 @@ class MyinfoView(APIView):
         ori_user = User.objects.filter(id=user.pk).first()
         # 요청된 데이터 중 비교할 필드만 선택
         update_fields = {key: value for key, value in request.data.items() if key in ["email", "name", "phone_number"]}
-        
+
         # 변경 사항 확인
         if all(getattr(ori_user, field) == update_fields[field] for field in update_fields):
             return Response({"error": "변경사항이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
