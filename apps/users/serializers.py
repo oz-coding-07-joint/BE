@@ -1,8 +1,6 @@
-import re
-
-from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.utils import IntegrityError
 from rest_framework import serializers
 
 from ..terms.models import TermsAgreement
@@ -115,21 +113,50 @@ class KakaoLoginSerializer(serializers.Serializer):
         # 이메일이 이미 존재하는 경우 업데이트 또는 새 사용자 생성
         user, created = User.objects.get_or_create(email=email)
 
-        # 기존 사용자가 아니면, 약관 동의를 처리해야 함
-        if created:
-            # 카카오 로그인 사용자는 반드시 약관에 동의해야 함
-            terms_agreements_data = validated_data.get("terms_agreements", [])
-            terms_agreements = TermsAgreementSerializer(data=terms_agreements_data, many=True)
-            terms_agreements.is_valid(raise_exception=True)
-            terms_agreements.save(user=user)
 
-        return user
+class SocialLoginSerializer(serializers.ModelSerializer):
+    terms_agreements = TermsAgreementSerializer(many=True, write_only=True)
 
-
-class SocialProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("name", "nickname", "phone_number")
+        fields = ("email", "name", "nickname", "phone_number", "terms_agreements")
+
+    def validate_phone_number(self, phone_number):
+        return validate_user_phone_number(phone_number)
+
+    def validate_terms_agreements(self, value):
+        return validate_signup_terms_agreements(value)
+
+    def update(self, instance, validated_data):
+        """기존 유저 정보 업데이트 및 약관 동의 저장"""
+
+        name = validated_data.pop("name")
+        nickname = validated_data.pop("nickname")
+        phone_number = validated_data.pop("phone_number")
+        terms_data = validated_data.pop("terms_agreements")
+
+        if User.objects.filter(nickname=nickname).exists() or User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError()
+
+        with transaction.atomic():
+            instance.name = name
+            instance.nickname = nickname
+            instance.phone_number = phone_number
+            instance.save()
+
+            existing_terms = TermsAgreement.objects.filter(user=instance)
+            new_terms = [
+                TermsAgreement(user=instance, **terms)
+                for terms in terms_data
+                if not existing_terms.filter(**terms).exists()
+            ]
+            try:
+                if new_terms:
+                    TermsAgreement.objects.bulk_create(new_terms)
+            except IntegrityError:
+                raise serializers.ValidationError()
+
+            return instance
 
 
 class UpdateMyPageSerializer(serializers.ModelSerializer):
