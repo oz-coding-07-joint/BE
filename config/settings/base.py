@@ -228,3 +228,13 @@ ACCOUNT_LOGOUT_ON_GET = True  # 로그아웃 요청 시 즉시 로그아웃
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_AUTO_SIGNUP = False  # 추가 정보 입력을 위해 False로 설정
 LOGIN_REDIRECT_URL = "/"
+
+SOCIALACCOUNT_PROVIDERS = {
+    "kakao": {
+        "APP": {
+            "client_id": os.getenv("KAKAO_CLIENT_ID"),
+            "secret": os.getenv("KAKAO_SECRET"),
+            "key": "",
+        }
+    }
+}
