@@ -110,6 +110,9 @@ class ChapterVideo(BaseModel):
             delete_file_from_ncp(self.video_url.name)  # 파일 삭제 실행
         super().delete(*args, **kwargs)
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         db_table = "chapter_video"
 
