@@ -49,11 +49,6 @@ DJANGO_APPS = [
 
 PACKAGE = [
     "corsheaders",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.kakao",
-    "django.contrib.sites",
     "storages",
     "drf_spectacular",  # 디버그일 때만 url 추가되도록 할 것
     "rest_framework",
@@ -72,7 +67,6 @@ INSTALLED_APPS = DJANGO_APPS + PACKAGE
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -170,12 +164,12 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "https://api.umdoong.shop"]
+CORS_ALLOWED_ORIGINS = ["https://api.umdoong.shop"]
 CORS_ALLOW_CREDENTIALS = True  # 쿠키를 포함한 요청 허용
 CORS_ALLOWED_METHODS = ["GET", "POST", "DELETE", "PUT", "PATCH"]
 CORS_ALLOWED_HEADERS = ["Content-Type", "Authorization"]
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "https://api.umdoong.shop"]
+CSRF_TRUSTED_ORIGINS = ["https://api.umdoong.shop"]
 CSRF_COOKIE_DOMAIN = ".umdoong.shop"
 SESSION_COOKIE_DOMAIN = os.getenv("SESSION_COOKIE_DOMAIN", ".127.0.0.1")
 
@@ -209,33 +203,6 @@ MEDIA_URL = f"https://{os.getenv('NCP_BUCKET_NAME')}.kr.object.ncloudstorage.com
 
 
 # Social
-SOCIALACCOUNT_ADAPTER = "apps.users.adapters.CustomSocialAccountAdapter"
-
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-]
-
-
-SITE_ID = 1
-
-REST_USE_JWT = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_LOGIN_METHODS = {"email"}
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_LOGOUT_ON_GET = True  # 로그아웃 요청 시 즉시 로그아웃
-SOCIALACCOUNT_QUERY_EMAIL = True
-SOCIALACCOUNT_AUTO_SIGNUP = False  # 추가 정보 입력을 위해 False로 설정
-SOCIALACCOUNT_LOGIN_ON_GET = True  # 소셜로그인 창으로 바로 가게 해줌
-LOGIN_REDIRECT_URL = "/"
-
-SOCIALACCOUNT_PROVIDERS = {
-    "kakao": {
-        "APP": {
-            "client_id": os.getenv("KAKAO_CLIENT_ID"),
-            "secret": os.getenv("KAKAO_SECRET"),
-            "key": "",
-        }
-    }
-}
+KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID"),
+KAKAO_SECRET = os.getenv("KAKAO_SECRET"),
+KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI"),
