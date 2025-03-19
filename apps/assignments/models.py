@@ -41,6 +41,9 @@ class Assignment(BaseModel):
             delete_file_from_ncp(self.file_url.name)
         super().delete(*args, **kwargs)
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         db_table = "assignment"
 
@@ -57,6 +60,10 @@ class AssignmentComment(BaseModel):
         if self.file_url:
             delete_file_from_ncp(self.file_url.name)
         super().delete(*args, **kwargs)
+
+    def __str__(self):
+        # 유저의 닉네임이 있으면 닉네임, 없으면 username 반환
+        return self.user.nickname if getattr(self.user, "nickname", None) else self.user.username
 
     class Meta:
         db_table = "assignment_comment"
