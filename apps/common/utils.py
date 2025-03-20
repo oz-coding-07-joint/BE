@@ -64,6 +64,8 @@ def generate_material_signed_url(object_key, expiration=300):
 
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
+        object_key = object_key.replace(settings.MEDIA_URL, "").lstrip("/")
+
         signed_url = s3_client.generate_presigned_url(
             "get_object",
             Params={
