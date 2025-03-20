@@ -49,7 +49,7 @@ class LectureListView(APIView):
 
         lectures = Lecture.objects.filter(course__enrollment__student=student, course__enrollment__is_active=True)
         if not lectures.exists():
-            return Response({"redirect_url": "https://dummy-landing-page.com"}, status=302)
+            return Response({"redirect_url": "https://sorisangsang.umdoong.shop/classinfo/harmonics"}, status=302)
 
         response_data = []
         for lecture in lectures:
