@@ -4,6 +4,7 @@ import re
 import boto3
 from rest_framework import serializers
 
+from apps.common.utils import generate_material_signed_url
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
 from apps.users.models import Instructor, Student
 from config.settings import base
@@ -60,36 +61,66 @@ class ChapterVideoTitleSerializer(serializers.ModelSerializer):
 
 
 class LectureChapterSerializer(serializers.ModelSerializer):
-    """챕터 목록 조회 Serializer (챕터 내 강의 영상 제목 포함)"""
+    """챕터 목록 조회 Serializer (학습 자료 다운로드 URL 포함)"""
 
     chapter_video_titles = ChapterVideoTitleSerializer(many=True, source="chaptervideo_set")
     material_info = serializers.SerializerMethodField()  # material_url과 원래 파일명 반환
+    chapter_video_titles = serializers.SerializerMethodField()
+    material_info = serializers.SerializerMethodField()  # 학습 자료 다운로드 URL 포함
 
     class Meta:
         model = LectureChapter
         fields = ["id", "lecture_id", "title", "material_info", "chapter_video_titles"]
 
-    def get_material_info(self, obj):
-        """material_url과 원래 파일명을 반환"""
-        if obj.material_url:
-            file_name = os.path.basename(obj.material_url.name)  # 전체 파일명 추출
-            original_file_name = self.extract_original_filename(file_name)  # UUID 및 접두어 제거
+    def get_chapter_video_titles(self, obj):
+        """챕터에 포함된 강의 영상 제목을 리스트로 반환"""
+        return [{"id": v.id, "title": v.title} for v in obj.chaptervideo_set.all()]
 
-            return {"url": obj.material_url.url, "file_name": original_file_name}
-        return None  # 자료가 없는 경우 None 반환
+    def get_material_info(self, obj):
+        """학습 자료(material_url) 존재 시 Signed URL 반환"""
+        if not obj.material_url:
+            return None  # 학습 자료가 없는 경우 None 반환
+
+        file_name = os.path.basename(obj.material_url.name)  # 원본 파일명 추출
+        original_file_name = self.extract_original_filename(file_name)  # UUID 제거
+
+        request = self.context.get("request")
+        user_id = request.user.id if request else None  # 사용자 ID 가져오기
+        signed_url = generate_material_signed_url(obj.material_url.name, user_id)  # 새로운 Signed URL 생성
+
+        return {"file_name": original_file_name, "download_url": signed_url}
 
     def extract_original_filename(self, file_name):
         """
-        파일명에서 UUID와 접두어(materials_)를 제거하여 원래 파일명만 추출하는 함수
-        예:
-        - "materials_9dbfa93c-9936-4d48-8732-54dbb25961c6_공주.png" → "공주.png"
-        - "videos_5d6f8e0b-7843-4e47-b4f7-828b7f56a0d2_강의.mp4" → "강의.mp4"
+        파일명에서 UUID 및 접두어(materials_) 제거하여 원래 파일명만 반환
         """
-        # UUID 패턴: _(UUID)_ (언더스코어 포함)
         pattern = r"^(materials|videos|thumbnails)?_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}_"
-
-        # 정규식으로 UUID + 접두어 제거
         return re.sub(pattern, "", file_name)
+
+    def generate_signed_url(self, obj):
+        """
+        Referrer를 검증하여 Signed URL을 반환
+        """
+        request = self.context.get("request")
+
+        allowed_referrers = [
+            "https://sorisangsang.umdoong.shop",
+            "https://api.umdoong.shop",
+            "http://localhost:8000",
+            "http://localhost:3000",
+            "http://127.0.0.1:8000",
+            "http://127.0.0.1:3000",
+        ]
+
+        # Referrer 체크 (필수 요청이 아닌 경우 항상 새로운 URL 반환)
+        if request:
+            referrer = request.META.get("HTTP_REFERER", "")
+            if referrer and not any(referrer.startswith(allowed) for allowed in allowed_referrers):
+                print(f"잘못된 referrer: {referrer}")  # 디버깅용 출력
+                return None  # Referrer가 허용되지 않으면 Signed URL 제공 안 함
+
+        # 새로운 Signed URL 강제 생성
+        return generate_material_signed_url(obj.material_url.name, expiration=300)
 
 
 class ProgressTrackingSerializer(serializers.ModelSerializer):
