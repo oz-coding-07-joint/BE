@@ -94,8 +94,12 @@ class LectureChapterSerializer(serializers.ModelSerializer):
         """
         파일명에서 UUID 및 접두어(materials_) 제거하여 원래 파일명만 반환
         """
-        pattern = r"^(materials|videos|thumbnails)?_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}_"
-        return re.sub(pattern, "", file_name)
+        pattern = r"^(?:materials)?_?\d{1,5}_([\w가-힣.-]+)_[\w-]{36}\.\w+$"
+
+        match = re.match(pattern, file_name)
+        if match:
+            return match.group(1)  # UUID 제거 후 원래 파일명 반환
+        return file_name  # 매칭 안 되면 기존 파일명 반환
 
     def generate_signed_url(self, obj):
         """
@@ -108,6 +112,7 @@ class LectureChapterSerializer(serializers.ModelSerializer):
             "https://api.umdoong.shop",
             "http://127.0.0.1:8000",
             "http://127.0.0.1:3000",
+            "http://localhost:3000",
         ]
 
         # Referrer 체크 (필수 요청이 아닌 경우 항상 새로운 URL 반환)
