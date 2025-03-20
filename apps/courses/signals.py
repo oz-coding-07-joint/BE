@@ -37,7 +37,6 @@ def clear_student_lecture_cache(student_id):
     """학생의 강의 목록 캐시 삭제"""
     cache_key = f"student_{student_id}_lectures"
     cache.delete(cache_key)
-    print(f"[Redis] 캐시 삭제됨: {cache_key}")  # 삭제 확인용 로그
 
 
 @receiver(pre_save, sender=ProgressTracking)
