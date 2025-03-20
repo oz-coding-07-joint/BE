@@ -108,6 +108,7 @@ class LectureChapterSerializer(serializers.ModelSerializer):
             "https://api.umdoong.shop",
             "http://127.0.0.1:8000",
             "http://127.0.0.1:3000",
+            "http://localhost:3000",
         ]
 
         # Referrer 체크 (필수 요청이 아닌 경우 항상 새로운 URL 반환)

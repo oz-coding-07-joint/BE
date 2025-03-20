@@ -321,6 +321,7 @@ class ChapterVideoDetailView(APIView):
                 "https://api.umdoong.shop",
                 "http://127.0.0.1:8000",
                 "http://127.0.0.1:3000",
+                "http://localhost:3000",
             ]
             referrer = request.META.get("HTTP_REFERER", "")
 
