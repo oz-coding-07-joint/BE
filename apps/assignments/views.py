@@ -110,9 +110,8 @@ class AssignmentCommentView(APIView):
         if request.data.get("parent") and not hasattr(request.user, "instructor"):
             return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
 
-        data = request.data.copy()
         serializer = AssignmentCommentCreateSerializer(
-            data=data, context={"assignment": assignment, "user": request.user}
+            data=request.data, context={"assignment": assignment, "user": request.user}
         )
         if serializer.is_valid():
             serializer.save()
