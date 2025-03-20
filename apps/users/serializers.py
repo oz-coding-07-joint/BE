@@ -28,15 +28,21 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
+            "provider",
+            "email",
             "name",
             "nickname",
-            "email",
             "phone_number",
-            "provider",
             "is_active",
             "is_staff",
             "is_superuser",
         )
+
+
+class SocialUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "provider", "name", "nickname", "phone_number", "is_active", "is_staff", "is_superuser")
 
 
 class SignupSerializer(serializers.ModelSerializer):
