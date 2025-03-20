@@ -50,11 +50,10 @@ def generate_material_signed_url(object_key, expiration=300):
     :param expiration: URL 유효 시간 (초 단위, 기본 5분)
     :return: Signed URL (유효 시간 동안만 접근 가능)
     """
-    try:
-        if not object_key:
-            print("[ERROR] Object key is None")
-            return None
+    if not object_key:
+        return None
 
+    try:
         s3_client = boto3.client(
             "s3",
             endpoint_url=settings.AWS_S3_ENDPOINT_URL,
@@ -79,8 +78,8 @@ def generate_material_signed_url(object_key, expiration=300):
         )
 
         return signed_url
+
     except Exception as e:
-        print(f"[ERROR] Failed to generate signed URL: {e}")
         return None  # 오류 발생 시 None 반환
 
 
