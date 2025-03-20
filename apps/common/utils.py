@@ -84,7 +84,6 @@ def generate_material_signed_url(object_key, expiration=300):
         return None  # 오류 발생 시 None 반환
 
 
-
 def generate_unique_filename(filename):
     """UUID + 원본 파일명 + 확장자로 파일명 생성하는 함수"""
     name, ext = os.path.splitext(filename)  # 파일명과 확장자 분리
