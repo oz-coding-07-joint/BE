@@ -112,17 +112,15 @@ class LectureChapterListView(APIView):
             cached_data = redis_client.get(cache_key)
 
             if cached_data:
-                # Redis에서 가져온 데이터가 있다면 JSON 파싱
-                cached_response = json.loads(cached_data)
+                data = json.loads(cached_data)
 
-                # 🚀 각 요청마다 새로운 Signed URL을 생성
-                for chapter in cached_response:
-                    if chapter["material_info"]:
-                        chapter["material_info"]["download_url"] = generate_material_signed_url(
-                            chapter["material_info"]["download_url"], request.user.id
-                        )
+                # 캐싱된 데이터에서 download_url을 새로 생성
+                for chapter in data:
+                    material_info = chapter.get("material_info")
+                    if material_info:
+                        material_info["download_url"] = generate_material_signed_url(material_info.get("file_name"))
 
-                return Response(cached_response, status=status.HTTP_200_OK)
+                return Response(data, status=status.HTTP_200_OK)
 
             # Redis에 데이터가 없으면 DB 조회
             chapters = LectureChapter.objects.filter(lecture_id=lecture_id)
@@ -132,22 +130,14 @@ class LectureChapterListView(APIView):
             serializer = LectureChapterSerializer(chapters, many=True, context={"request": request})
             response_data = serializer.data
 
-            # 🚀 Redis에 저장할 때 Signed URL을 제거하고 저장
+            # 🔥 캐싱할 때 download_url을 제외
             for chapter in response_data:
-                if chapter["material_info"]:
-                    chapter["material_info"].pop("download_url", None)  # Signed URL 제거 후 저장
+                if chapter.get("material_info"):
+                    chapter["material_info"].pop("download_url", None)
 
-            # Redis에 캐싱 (Signed URL 제외)
             redis_client.setex(cache_key, 18000, json.dumps(response_data))
 
-            # 응답 직전에 다시 Signed URL을 생성하여 반환
-            for chapter in response_data:
-                if chapter["material_info"]:
-                    chapter["material_info"]["download_url"] = generate_material_signed_url(
-                        chapter["material_info"]["file_name"], request.user.id
-                    )
-
-            return Response(response_data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response(
@@ -329,8 +319,6 @@ class ChapterVideoDetailView(APIView):
             allowed_referrers = [
                 "https://sorisangsang.umdoong.shop",
                 "https://api.umdoong.shop",
-                "http://localhost:8000",
-                "http://localhost:3000",
                 "http://127.0.0.1:8000",
                 "http://127.0.0.1:3000",
             ]

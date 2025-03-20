@@ -50,33 +50,39 @@ def generate_material_signed_url(object_key, expiration=300):
     :param expiration: URL 유효 시간 (초 단위, 기본 5분)
     :return: Signed URL (유효 시간 동안만 접근 가능)
     """
-    if not object_key:
-        return None
+    try:
+        if not object_key:
+            print("[ERROR] Object key is None")
+            return None
 
-    s3_client = boto3.client(
-        "s3",
-        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_S3_REGION_NAME,
-    )
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME,
+        )
 
-    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+        bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
-    signed_url = s3_client.generate_presigned_url(
-        "get_object",
-        Params={
-            "Bucket": bucket_name,
-            "Key": object_key,
-            "ResponseContentType": "application/octet-stream",  # 다운로드 가능하도록 설정
-            "ResponseContentDisposition": "attachment",  # 파일 다운로드 강제
-            "ResponseCacheControl": "no-cache",  # 캐싱 방지
-        },
-        ExpiresIn=expiration,
-        HttpMethod="GET",
-    )
+        signed_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={
+                "Bucket": bucket_name,
+                "Key": object_key,
+                "ResponseContentType": "application/octet-stream",
+                "ResponseContentDisposition": f'attachment; filename="{os.path.basename(object_key)}"',
+                "ResponseCacheControl": "no-cache",
+            },
+            ExpiresIn=expiration,
+            HttpMethod="GET",
+        )
 
-    return signed_url
+        return signed_url
+    except Exception as e:
+        print(f"[ERROR] Failed to generate signed URL: {e}")
+        return None  # 오류 발생 시 None 반환
+
 
 
 def generate_unique_filename(filename):
