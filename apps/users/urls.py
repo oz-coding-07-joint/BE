@@ -10,7 +10,7 @@ from .views import (  # CustomSocialLoginView,
     SocialSignupCompleteView,
     TokenRefreshView,
     VerifyEmailCodeView,
-    WithdrawalView,
+    WithdrawalView, KakaoAuthView,
 )
 
 urlpatterns = [
@@ -24,5 +24,5 @@ urlpatterns = [
     path("myinfo/", MyinfoView.as_view(), name="myinfo"),
     path("password-change/", ChangePasswordView.as_view(), name="change-password"),
     path("token-refresh/", TokenRefreshView.as_view(), name="token-refresh"),
-    # path("social-login/", CustomSocialLoginView.as_view(), name="social-login"),
+    path("social-login/", KakaoAuthView.as_view(), name="social-login"),
 ]
