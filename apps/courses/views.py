@@ -9,7 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.permissions import IsEnrolledStudent
-from apps.common.utils import generate_ncp_signed_url, redis_client
+from apps.common.utils import (
+    generate_material_signed_url,
+    generate_ncp_signed_url,
+    redis_client,
+)
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
 from apps.courses.serializers import (
     ChapterVideoSerializer,
