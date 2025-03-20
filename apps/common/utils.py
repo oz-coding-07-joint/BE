@@ -79,7 +79,6 @@ def generate_material_signed_url(object_key, expiration=300):
     return signed_url
 
 
-
 def generate_unique_filename(filename):
     """UUID + 원본 파일명 + 확장자로 파일명 생성하는 함수"""
     name, ext = os.path.splitext(filename)  # 파일명과 확장자 분리
