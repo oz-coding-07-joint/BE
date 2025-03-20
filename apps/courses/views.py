@@ -1,5 +1,6 @@
 import json
 
+from django.core.cache import cache
 from drf_spectacular.utils import (
     OpenApiResponse,
     extend_schema,
@@ -43,28 +44,36 @@ class LectureListView(APIView):
         tags=["Course"],
     )
     def get(self, request):
-        student = Student.objects.filter(user=request.user).first()
-        if not student:
-            return Response({"error": "학생 계정이 아닙니다."}, status=403)
+        student = request.user.student
 
+        # Redis 캐싱 키 설정
+        cache_key = f"student_{student.id}_lectures"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return Response(cached_data, status=status.HTTP_200_OK)
+
+        # 수강 중인 강의 목록 조회
         lectures = Lecture.objects.filter(course__enrollment__student=student, course__enrollment__is_active=True)
         if not lectures.exists():
-            return Response({"redirect_url": "https://dummy-landing-page.com"}, status=302)
+            return Response({"redirect_url": "https://sorisangsang.umdoong.shop/classinfo/harmonics"}, status=302)
 
         response_data = []
         for lecture in lectures:
-            chapter_videos = ChapterVideo.objects.filter(lecture_chapter__lecture=lecture)
-            total_videos = chapter_videos.count()
-            completed_videos = chapter_videos.filter(
-                progresstracking__student=student, progresstracking__is_completed=True
+            total_videos = ChapterVideo.objects.filter(lecture_chapter__lecture=lecture).count()
+            completed_videos = ProgressTracking.objects.filter(
+                chapter_video__lecture_chapter__lecture=lecture, student=student, is_completed=True
             ).count()
             progress_rate = (completed_videos / total_videos) * 100 if total_videos > 0 else 0
 
             serialized_lecture = LectureListSerializer(lecture, context={"request": request}).data
-            serialized_lecture["progress_rate"] = progress_rate
+            serialized_lecture["progress_rate"] = round(progress_rate, 2)
             response_data.append(serialized_lecture)
 
-        return Response({"student_id": student.id, "lectures": response_data}, status=200)
+        # Redis에 캐싱 (1시간)
+        cache.set(cache_key, response_data, timeout=3600)
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class LectureDetailView(APIView):
@@ -130,7 +139,7 @@ class LectureChapterListView(APIView):
             serializer = LectureChapterSerializer(chapters, many=True, context={"request": request})
             response_data = serializer.data
 
-            # 🔥 캐싱할 때 download_url을 제외
+            # 캐싱할 때 download_url을 제외
             for chapter in response_data:
                 if chapter.get("material_info"):
                     chapter["material_info"].pop("download_url", None)
@@ -321,6 +330,7 @@ class ChapterVideoDetailView(APIView):
                 "https://api.umdoong.shop",
                 "http://127.0.0.1:8000",
                 "http://127.0.0.1:3000",
+                "http://localhost:3000",
             ]
             referrer = request.META.get("HTTP_REFERER", "")
 
