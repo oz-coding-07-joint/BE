@@ -9,7 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.permissions import IsEnrolledStudent
-from apps.common.utils import generate_ncp_signed_url, redis_client
+from apps.common.utils import (
+    generate_material_signed_url,
+    generate_ncp_signed_url,
+    redis_client,
+)
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
 from apps.courses.serializers import (
     ChapterVideoSerializer,
@@ -104,23 +108,44 @@ class LectureChapterListView(APIView):
     )
     def get(self, request, lecture_id):
         try:
-            cache_key = f"lecture_chapters:{lecture_id}"  # Redis 키 설정
+            cache_key = f"lecture_chapters:{lecture_id}"
             cached_data = redis_client.get(cache_key)
 
             if cached_data:
-                # Redis에서 데이터가 존재하면 그대로 반환
-                return Response(json.loads(cached_data), status=status.HTTP_200_OK)
+                # Redis에서 가져온 데이터가 있다면 JSON 파싱
+                cached_response = json.loads(cached_data)
+
+                # 🚀 각 요청마다 새로운 Signed URL을 생성
+                for chapter in cached_response:
+                    if chapter["material_info"]:
+                        chapter["material_info"]["download_url"] = generate_material_signed_url(
+                            chapter["material_info"]["download_url"], request.user.id
+                        )
+
+                return Response(cached_response, status=status.HTTP_200_OK)
 
             # Redis에 데이터가 없으면 DB 조회
             chapters = LectureChapter.objects.filter(lecture_id=lecture_id)
             if not chapters.exists():
                 return Response({"error": "해당 챕터를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-            serializer = LectureChapterSerializer(chapters, many=True)
+            serializer = LectureChapterSerializer(chapters, many=True, context={"request": request})
             response_data = serializer.data
 
-            # Redis에 캐싱 (다섯시간)
+            # 🚀 Redis에 저장할 때 Signed URL을 제거하고 저장
+            for chapter in response_data:
+                if chapter["material_info"]:
+                    chapter["material_info"].pop("download_url", None)  # Signed URL 제거 후 저장
+
+            # Redis에 캐싱 (Signed URL 제외)
             redis_client.setex(cache_key, 18000, json.dumps(response_data))
+
+            # 응답 직전에 다시 Signed URL을 생성하여 반환
+            for chapter in response_data:
+                if chapter["material_info"]:
+                    chapter["material_info"]["download_url"] = generate_material_signed_url(
+                        chapter["material_info"]["file_name"], request.user.id
+                    )
 
             return Response(response_data, status=status.HTTP_200_OK)
 
@@ -302,7 +327,7 @@ class ChapterVideoDetailView(APIView):
 
             # Referrer 확인 (일부 요청에는 HTTP_REFERER가 없을 수 있음)
             allowed_referrers = [
-                "https://umdoong.shop",
+                "https://sorisangsang.umdoong.shop",
                 "https://api.umdoong.shop",
                 "http://localhost:8000",
                 "http://localhost:3000",

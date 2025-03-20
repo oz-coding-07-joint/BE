@@ -6,7 +6,7 @@ import redis
 from django.conf import settings
 
 
-def generate_ncp_signed_url(object_key, expiration=60 * 60):
+def generate_ncp_signed_url(object_key, expiration=60 * 30):
     """
     NCP Object Storage용 Signed URL 생성 함수
 
@@ -35,6 +35,42 @@ def generate_ncp_signed_url(object_key, expiration=60 * 60):
             "Key": object_key,
             "ResponseContentType": "video/mp4",  # 파일 유형 설정 (필요시)
             "ResponseCacheControl": "no-cache",  # 캐시 방지
+        },
+        ExpiresIn=expiration,
+        HttpMethod="GET",
+    )
+
+    return signed_url
+
+
+def generate_material_signed_url(object_key, expiration=300):
+    """
+    NCP Object Storage용 학습 자료 다운로드 Signed URL 생성
+    :param object_key: 파일 경로
+    :param expiration: URL 유효 시간 (초 단위, 기본 5분)
+    :return: Signed URL (유효 시간 동안만 접근 가능)
+    """
+    if not object_key:
+        return None
+
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
+
+    bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+
+    signed_url = s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": bucket_name,
+            "Key": object_key,
+            "ResponseContentType": "application/octet-stream",  # 다운로드 가능하도록 설정
+            "ResponseContentDisposition": "attachment",  # 파일 다운로드 강제
+            "ResponseCacheControl": "no-cache",  # 캐싱 방지
         },
         ExpiresIn=expiration,
         HttpMethod="GET",
