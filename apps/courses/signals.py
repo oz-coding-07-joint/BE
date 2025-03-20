@@ -10,7 +10,6 @@ def clear_lecture_chapter_cache(lecture_id):
     """해당 강의(lecture_id)와 관련된 챕터 데이터의 Redis 캐시 삭제"""
     cache_key = f"lecture_chapters:{lecture_id}"
     redis_client.delete(cache_key)
-    print(f"[Redis] 캐시 삭제됨: {cache_key}")  # 로그 출력 (확인용)
 
 
 # LectureChapter 추가/수정/삭제 시 캐시 삭제
