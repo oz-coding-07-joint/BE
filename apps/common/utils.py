@@ -6,7 +6,7 @@ import redis
 from django.conf import settings
 
 
-def generate_ncp_signed_url(object_key, expiration=60 * 60):
+def generate_ncp_signed_url(object_key, expiration=60 * 30):
     """
     NCP Object Storage용 Signed URL 생성 함수
 

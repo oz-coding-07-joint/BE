@@ -207,11 +207,11 @@ class ChapterVideoSerializer(serializers.ModelSerializer):
         bucket_name = base.AWS_STORAGE_BUCKET_NAME
         object_key = obj.video_url.name
 
-        # Signed URL 생성 (2분 유효)
+        # Signed URL 생성 (30분 유효)
         url = s3_client.generate_presigned_url(
             "get_object",
             Params={"Bucket": bucket_name, "Key": object_key},
-            ExpiresIn=120,  # 2분 후 만료
+            ExpiresIn=60 * 30,  # 30분 후 만료
             HttpMethod="GET",
         )
         return url
