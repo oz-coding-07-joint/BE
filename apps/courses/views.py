@@ -130,7 +130,7 @@ class LectureChapterListView(APIView):
             serializer = LectureChapterSerializer(chapters, many=True, context={"request": request})
             response_data = serializer.data
 
-            # 🔥 캐싱할 때 download_url을 제외
+            # 캐싱할 때 download_url을 제외
             for chapter in response_data:
                 if chapter.get("material_info"):
                     chapter["material_info"].pop("download_url", None)
