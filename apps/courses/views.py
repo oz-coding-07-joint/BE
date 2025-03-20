@@ -302,7 +302,7 @@ class ChapterVideoDetailView(APIView):
 
             # Referrer 확인 (일부 요청에는 HTTP_REFERER가 없을 수 있음)
             allowed_referrers = [
-                "https://umdoong.shop",
+                "https://sorisangsang.umdoong.shop",
                 "https://api.umdoong.shop",
                 "http://localhost:8000",
                 "http://localhost:3000",
