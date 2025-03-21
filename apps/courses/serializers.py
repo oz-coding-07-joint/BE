@@ -98,7 +98,7 @@ class LectureChapterSerializer(serializers.ModelSerializer):
     @staticmethod
     def extract_original_filename(file_name):
         """
-        파일명에서 UUID 및 접두어(materials_, videos_, thumbnails_) 제거하여 원래 파일명만 반환
+        파일명에서 UUID 및 접두어(materials_) 제거하여 원래 파일명만 반환
         """
         pattern = r"^(?:materials_)?[\w-]+_([\w가-힣.-]+)$"
 
