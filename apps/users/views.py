@@ -336,7 +336,7 @@ class LogoutView(APIView):
     """
     로그아웃 API
     """
-
+    
     @extend_schema(
         summary="로그아웃", description="refresh token을 blacklist에 등록 후 로그아웃하는 API입니다", tags=["User"]
     )
@@ -355,9 +355,6 @@ class LogoutView(APIView):
             token_response = requests.post(kakao_refresh_url, data=data)
             if token_response.status_code != 200:
                 return Response({"error": "카카오 토큰 재발급에 실패했습니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-            redis_client.delete(RedisKeys.get_kakao_refresh_token_key(request.user.provider_id))
-            redis_client.delete(RedisKeys.get_kakao_access_token_key(request.user.provider_id))
 
             # 소셜로그인 유저 로그아웃 요청
             kakao_logout_url = "https://kapi.kakao.com/v1/user/logout"
@@ -385,6 +382,11 @@ class LogoutView(APIView):
 
         response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_200_OK)
         response.delete_cookie("refresh_token")
+        
+        # 소셜로그인 캐시 정보 삭제
+        redis_client.delete(RedisKeys.get_kakao_refresh_token_key(request.user.provider_id))
+        redis_client.delete(RedisKeys.get_kakao_access_token_key(request.user.provider_id))
+        
         return response
 
 
