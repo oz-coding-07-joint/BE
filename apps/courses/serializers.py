@@ -65,8 +65,6 @@ class LectureChapterSerializer(serializers.ModelSerializer):
 
     chapter_video_titles = ChapterVideoTitleSerializer(many=True, source="chaptervideo_set")
     material_info = serializers.SerializerMethodField()  # material_url과 원래 파일명 반환
-    chapter_video_titles = serializers.SerializerMethodField()
-    material_info = serializers.SerializerMethodField()  # 학습 자료 다운로드 URL 포함
 
     class Meta:
         model = LectureChapter
