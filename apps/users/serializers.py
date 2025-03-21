@@ -115,7 +115,7 @@ class SocialSignupSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """기존 유저 정보 업데이트 및 약관 동의 저장"""
-        
+
         name = validated_data.pop("name")
         nickname = validated_data.pop("nickname")
         phone_number = validated_data.pop("phone_number")

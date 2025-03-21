@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (  # CustomSocialLoginView,
     ChangePasswordView,
+    KakaoAuthView,
     LoginView,
     LogoutView,
     MyinfoView,
@@ -10,7 +11,7 @@ from .views import (  # CustomSocialLoginView,
     SocialSignupCompleteView,
     TokenRefreshView,
     VerifyEmailCodeView,
-    WithdrawalView, KakaoAuthView,
+    WithdrawalView,
 )
 
 urlpatterns = [
