@@ -132,7 +132,7 @@ class AssignmentCommentView(APIView):
         - 요청 데이터는 클라이언트에서 content, file_url, parent만 전송하며
           assignment와 request.user 정보는 context를 통해 전달.
 
-          Args:
+        Args:
             request (Request): 요청 객체.
             assignment_id (int): 과제의 식별자.
 
