@@ -14,9 +14,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from config.settings.base import KAKAO_CLIENT_ID, KAKAO_SECRET, KAKAO_REDIRECT_URI
+
 from apps.common.utils import redis_client
-from config.settings.base import EMAIL_HOST_USER
+from config.settings.base import (
+    EMAIL_HOST_USER,
+    KAKAO_CLIENT_ID,
+    KAKAO_REDIRECT_URI,
+    KAKAO_SECRET,
+)
 
 from .authentications import AllowInactiveUserJWTAuthentication
 from .models import Student, User
@@ -292,9 +297,9 @@ class TokenRefreshView(APIView):
     refresh 토큰을 받으면 기존의 refresh token은 blacklist 처리하고
     access와 refresh token을 발급해주는 API
     """
-    
+
     authentication_classes = [AllowInactiveUserJWTAuthentication]
-    
+
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
@@ -336,7 +341,7 @@ class LogoutView(APIView):
     """
     로그아웃 API
     """
-    
+
     @extend_schema(
         summary="로그아웃", description="refresh token을 blacklist에 등록 후 로그아웃하는 API입니다", tags=["User"]
     )
@@ -382,11 +387,11 @@ class LogoutView(APIView):
 
         response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_200_OK)
         response.delete_cookie("refresh_token")
-        
+
         # 소셜로그인 캐시 정보 삭제
         redis_client.delete(RedisKeys.get_kakao_refresh_token_key(request.user.provider_id))
         redis_client.delete(RedisKeys.get_kakao_access_token_key(request.user.provider_id))
-        
+
         return response
 
 
@@ -413,7 +418,7 @@ class WithdrawalView(APIView):
                 token_response = requests.post(kakao_refresh_url, data=data)
                 if token_response.status_code != 200:
                     return Response({"error": "카카오 토큰 재발급에 실패했습니다."}, status=status.HTTP_400_BAD_REQUEST)
-                
+
                 # 카카오 연결 끊기
                 unlink_url = "https://kapi.kakao.com/v1/user/unlink"
                 kakao_access_token = token_response.json()["access_token"]
@@ -581,13 +586,12 @@ class KakaoAuthView(APIView):
 
         if not kakao_id:
             return Response({"error": "provider_id가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
+
         # 소프트 삭제된 유저인 경우 db 완전 삭제 후 다시 계정 생성
         if User.deleted_objects.filter(provider_id=kakao_id).exists():
             deleted_user = User.deleted_objects.filter(provider_id=kakao_id).first()
             deleted_user.hard_delete()
-            
+
         # 기존 가입된 유저인지 확인
         user = User.objects.filter(provider_id=kakao_id).first()
 
