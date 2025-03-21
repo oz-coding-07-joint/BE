@@ -292,7 +292,9 @@ class TokenRefreshView(APIView):
     refresh 토큰을 받으면 기존의 refresh token은 blacklist 처리하고
     access와 refresh token을 발급해주는 API
     """
-
+    
+    authentication_classes = [AllowInactiveUserJWTAuthentication]
+    
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
