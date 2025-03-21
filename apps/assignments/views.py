@@ -33,7 +33,6 @@ class AssignmentView(APIView):
         },
         tags=["Assignment"],
     )
-    # 강의 챕터별 과제 목록 조회
     def get(self, request, lecture_chapter_id):
         """lecture_chapter_id를 기반으로 과제 목록을 조회.
 
@@ -55,7 +54,6 @@ class AssignmentView(APIView):
         if cached_data:
             assignments_data = json.loads(cached_data)
         else:
-            # lecture_chapter_id에 연결된 과제들을 조회
             assignments = Assignment.objects.filter(chapter_video__lecture_chapter__id=lecture_chapter_id)
             serializer = AssignmentSerializer(assignments, many=True)
             assignments_data = serializer.data
