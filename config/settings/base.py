@@ -203,6 +203,6 @@ MEDIA_URL = f"https://{os.getenv('NCP_BUCKET_NAME')}.kr.object.ncloudstorage.com
 
 
 # Social
-KAKAO_CLIENT_ID = os.getenv("KAKAO_CLIENT_ID"),
-KAKAO_SECRET = os.getenv("KAKAO_SECRET"),
-KAKAO_REDIRECT_URI = os.getenv("KAKAO_REDIRECT_URI"),
+KAKAO_CLIENT_ID = (os.getenv("KAKAO_CLIENT_ID"),)
+KAKAO_SECRET = (os.getenv("KAKAO_SECRET"),)
+KAKAO_REDIRECT_URI = (os.getenv("KAKAO_REDIRECT_URI"),)
