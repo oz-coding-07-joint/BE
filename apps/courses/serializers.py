@@ -90,7 +90,6 @@ class LectureChapterSerializer(serializers.ModelSerializer):
 
         return {"file_name": original_file_name, "download_url": signed_url}
 
-    def extract_original_filename(self, file_name):
     @staticmethod
     def extract_original_filename(file_name):
         """
