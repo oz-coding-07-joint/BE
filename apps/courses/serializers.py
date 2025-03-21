@@ -91,10 +91,12 @@ class LectureChapterSerializer(serializers.ModelSerializer):
         return {"file_name": original_file_name, "download_url": signed_url}
 
     def extract_original_filename(self, file_name):
+    @staticmethod
+    def extract_original_filename(file_name):
         """
-        파일명에서 UUID 및 접두어(materials_) 제거하여 원래 파일명만 반환
+        파일명에서 UUID 및 접두어(materials_, videos_, thumbnails_) 제거하여 원래 파일명만 반환
         """
-        pattern = r"^(?:materials)?_?\d{1,5}_([\w가-힣.-]+)_[\w-]{36}\.\w+$"
+        pattern = r"^(?:materials_)?[\w-]+_([\w가-힣.-]+)$"
 
         match = re.match(pattern, file_name)
         if match:
