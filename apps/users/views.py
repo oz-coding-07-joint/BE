@@ -343,7 +343,7 @@ class LogoutView(APIView):
     def post(self, request):
 
         # 소셜로그인 유저인지 확인 후 소셜 로그아웃 우선 진행
-        if User.objects.filter(provider_id=request.user.provider_id).exists():
+        if request.user.provider_id is not None:
             # 엑세스토큰 refresh 요청
             kakao_refresh_url = "https://kauth.kakao.com/oauth/token"
             data = {
@@ -396,7 +396,38 @@ class WithdrawalView(APIView):
     """
 
     @extend_schema(summary="회원탈퇴", description="유저를 soft delete로 관리하는 회원탈퇴 API입니다", tags=["User"])
-    def post(self, request):
+    def delete(self, request):
+        user = request.user
+        # 소셜 유저라면 소셜 로그인을 먼저 끊어주기 위한 if문
+        print(user.provider_id)
+        if user.provider_id is not None:
+            try:
+                # 엑세스토큰 refresh 요청
+                kakao_refresh_url = "https://kauth.kakao.com/oauth/token"
+                data = {
+                    "grant_type": "refresh_token",
+                    "client_id": KAKAO_CLIENT_ID,
+                    "client_secret": KAKAO_SECRET,
+                    "refresh_token": redis_client.get(RedisKeys.get_kakao_refresh_token_key(request.user.provider_id)),
+                }
+                token_response = requests.post(kakao_refresh_url, data=data)
+                if token_response.status_code != 200:
+                    return Response({"error": "카카오 토큰 재발급에 실패했습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # 카카오 연결 끊기
+                unlink_url = "https://kapi.kakao.com/v1/user/unlink"
+                kakao_access_token = token_response.json()["access_token"]
+                headers = {"Authorization": f"Bearer {kakao_access_token}"}
+                response = requests.post(unlink_url, headers=headers)
+                if response.status_code != 200:
+                    return Response({"error": "카카오 계정 연결 해제 실패"}, status=status.HTTP_400_BAD_REQUEST)
+
+            except Exception:
+                return Response(
+                    {"error": "소셜 계정 연결 해제 중 오류 발생, 관리자에게 문의해주세요"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         # 쿠키에서 refresh token 추출
         refresh_token = request.COOKIES.get("refresh_token")
         if refresh_token:
@@ -407,7 +438,7 @@ class WithdrawalView(APIView):
                 return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
 
         # soft delete 처리 (탈퇴 상태로 저장)
-        user = request.user
+        user.is_active = False
         user.delete()
 
         # refresh token 삭제 후 응답 반환
@@ -416,6 +447,9 @@ class WithdrawalView(APIView):
             status=status.HTTP_200_OK,
         )
         response.delete_cookie("refresh_token")
+        # 소셜로그인 캐시 정보 삭제
+        redis_client.delete(RedisKeys.get_kakao_refresh_token_key(request.user.provider_id))
+        redis_client.delete(RedisKeys.get_kakao_access_token_key(request.user.provider_id))
         return response
 
 
@@ -547,7 +581,13 @@ class KakaoAuthView(APIView):
 
         if not kakao_id:
             return Response({"error": "provider_id가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        
+        # 소프트 삭제된 유저인 경우 db 완전 삭제 후 다시 계정 생성
+        if User.deleted_objects.filter(provider_id=kakao_id).exists():
+            deleted_user = User.deleted_objects.filter(provider_id=kakao_id).first()
+            deleted_user.hard_delete()
+            
         # 기존 가입된 유저인지 확인
         user = User.objects.filter(provider_id=kakao_id).first()
 
