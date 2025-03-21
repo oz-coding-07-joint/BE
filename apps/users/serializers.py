@@ -28,15 +28,21 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
+            "provider",
+            "email",
             "name",
             "nickname",
-            "email",
             "phone_number",
-            "provider",
             "is_active",
             "is_staff",
             "is_superuser",
         )
+
+
+class SocialUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "provider", "name", "nickname", "phone_number", "is_active", "is_staff", "is_superuser")
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -94,32 +100,12 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 
-class KakaoLoginSerializer(serializers.Serializer):
-    access_token = serializers.CharField()  # 카카오에서 받은 액세스 토큰
-
-    def validate_access_token(self, value):
-        """카카오 액세스 토큰 검증 및 사용자 데이터 가져오기"""
-        user_data = get_kakao_user_data(value)  # 카카오 API를 통해 사용자 정보 가져오기
-        if not user_data:
-            raise serializers.ValidationError("유효하지 않은 액세스 토큰입니다.")
-        self.context["user_data"] = user_data  # 사용자 데이터 저장
-        return value
-
-    def create(self, validated_data):
-        """카카오 로그인 후 사용자 생성 및 약관 동의 처리"""
-        user_data = self.context["user_data"]
-        email = user_data.get("email")
-
-        # 이메일이 이미 존재하는 경우 업데이트 또는 새 사용자 생성
-        user, created = User.objects.get_or_create(email=email)
-
-
-class SocialLoginSerializer(serializers.ModelSerializer):
+class SocialSignupSerializer(serializers.ModelSerializer):
     terms_agreements = TermsAgreementSerializer(many=True, write_only=True)
 
     class Meta:
         model = User
-        fields = ("email", "name", "nickname", "phone_number", "terms_agreements")
+        fields = ("id", "name", "nickname", "phone_number", "terms_agreements")
 
     def validate_phone_number(self, phone_number):
         return validate_user_phone_number(phone_number)
