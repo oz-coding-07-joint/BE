@@ -146,12 +146,31 @@ class LectureChapterListView(APIView):
 
             # 캐싱할 때 download_url을 제외
             for chapter in response_data:
-                if chapter.get("material_info"):
-                    chapter["material_info"].pop("download_url", None)
+                material_info = chapter.get("material_info")
+                if material_info:
+                    object_key = material_info["object_key"]
+                    original_file_name = material_info["file_name"]
 
+                    # 캐시 저장용: download_url 제거
+                    material_info.pop("download_url", None)
+
+            # Redis에는 download_url 없는 상태로 저장
             redis_client.setex(cache_key, 18000, json.dumps(response_data))
 
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            # 응답 직전: 다시 download_url 붙여주기
+            for chapter in response_data:
+                material_info = chapter.get("material_info")
+                if material_info:
+                    object_key = material_info["object_key"]
+                    original_file_name = material_info["file_name"]
+
+                    material_info["download_url"] = generate_material_signed_url(
+                        object_key,
+                        original_filename=original_file_name,
+                    )
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
 
         except Exception as e:
             return Response(
