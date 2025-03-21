@@ -148,8 +148,14 @@ class LectureChapterListView(APIView):
             for chapter in response_data:
                 material_info = chapter.get("material_info")
                 if material_info:
-                    object_key = material_info["object_key"]
-                    original_file_name = material_info["file_name"]
+                    object_key = material_info.get("object_key")
+                    original_file_name = material_info.get("file_name")
+
+                    if object_key and original_file_name:
+                        material_info["download_url"] = generate_material_signed_url(
+                            object_key,
+                            original_filename=original_file_name,
+                        )
 
                     # 캐시 저장용: download_url 제거
                     material_info.pop("download_url", None)
