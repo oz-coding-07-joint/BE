@@ -652,7 +652,7 @@ class SocialSignupCompleteView(APIView):
                 user.refresh_from_db()
                 if not Student.objects.filter(user=user).exists():
                     Student.objects.create(user=user)
-            return Response({"message": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+            return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
 
         #             except Exception as e:
         #                 return Response({"error": f"추가 정보 입력 중 오류 발생{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
