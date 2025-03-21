@@ -73,7 +73,7 @@ def generate_material_signed_url(object_key, expiration=300, original_filename=N
             Params={
                 "Bucket": bucket_name,
                 "Key": object_key,
-                "ResponseContentType": "application/octet-stream", #  브라우저가 파일을 무조건 다운로드하도록 지시하는 binary type
+                "ResponseContentType": "application/octet-stream",  #  브라우저가 파일을 무조건 다운로드하도록 지시하는 binary type
                 "ResponseContentDisposition": f'attachment; filename="{filename}"',
                 "ResponseCacheControl": "no-cache",
             },

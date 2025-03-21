@@ -131,8 +131,7 @@ class LectureChapterListView(APIView):
                         original_file_name = material_info["file_name"]
 
                         material_info["download_url"] = generate_material_signed_url(
-                            object_key,
-                            original_filename=original_file_name
+                            object_key, original_filename=original_file_name
                         )
 
                 return Response(data, status=status.HTTP_200_OK)
