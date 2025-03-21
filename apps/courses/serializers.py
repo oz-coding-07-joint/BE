@@ -65,8 +65,6 @@ class LectureChapterSerializer(serializers.ModelSerializer):
 
     chapter_video_titles = ChapterVideoTitleSerializer(many=True, source="chaptervideo_set")
     material_info = serializers.SerializerMethodField()  # material_url과 원래 파일명 반환
-    chapter_video_titles = serializers.SerializerMethodField()
-    material_info = serializers.SerializerMethodField()  # 학습 자료 다운로드 URL 포함
 
     class Meta:
         model = LectureChapter
@@ -84,17 +82,23 @@ class LectureChapterSerializer(serializers.ModelSerializer):
         file_name = os.path.basename(obj.material_url.name)  # 원본 파일명 추출
         original_file_name = self.extract_original_filename(file_name)  # UUID 제거
 
-        request = self.context.get("request")
-        user_id = request.user.id if request else None  # 사용자 ID 가져오기
-        signed_url = generate_material_signed_url(obj.material_url.name, user_id)  # 새로운 Signed URL 생성
+        signed_url = generate_material_signed_url(
+            object_key=obj.material_url.name,
+            original_filename=original_file_name,  # 이게 다운로드 파일명으로 사용됨
+        )
 
-        return {"file_name": original_file_name, "download_url": signed_url}
+        return {
+            "file_name": original_file_name,  # 사용자에게 보여줄 이름
+            "object_key": obj.material_url.name,
+            "download_url": signed_url,  # 서명된 S3 다운로드 URL
+        }
 
-    def extract_original_filename(self, file_name):
+    @staticmethod
+    def extract_original_filename(file_name):
         """
         파일명에서 UUID 및 접두어(materials_) 제거하여 원래 파일명만 반환
         """
-        pattern = r"^(?:materials)?_?\d{1,5}_([\w가-힣.-]+)_[\w-]{36}\.\w+$"
+        pattern = r"^(?:materials_)?[\w-]+_([\w가-힣.-]+)$"
 
         match = re.match(pattern, file_name)
         if match:

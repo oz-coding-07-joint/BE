@@ -43,7 +43,7 @@ def generate_ncp_signed_url(object_key, expiration=60 * 30):
     return signed_url
 
 
-def generate_material_signed_url(object_key, expiration=300):
+def generate_material_signed_url(object_key, expiration=300, original_filename=None):
     """
     NCP Object Storage용 학습 자료 다운로드 Signed URL 생성
     :param object_key: 파일 경로
@@ -66,13 +66,15 @@ def generate_material_signed_url(object_key, expiration=300):
 
         object_key = object_key.replace(settings.MEDIA_URL, "").lstrip("/")
 
+        filename = original_filename or os.path.basename(object_key)
+
         signed_url = s3_client.generate_presigned_url(
             "get_object",
             Params={
                 "Bucket": bucket_name,
                 "Key": object_key,
-                "ResponseContentType": "application/octet-stream",
-                "ResponseContentDisposition": f'attachment; filename="{os.path.basename(object_key)}"',
+                "ResponseContentType": "application/octet-stream",  #  브라우저가 파일을 무조건 다운로드하도록 지시하는 binary type
+                "ResponseContentDisposition": f'attachment; filename="{filename}"',
                 "ResponseCacheControl": "no-cache",
             },
             ExpiresIn=expiration,

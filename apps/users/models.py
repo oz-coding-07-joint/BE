@@ -44,8 +44,9 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
     name = models.CharField(max_length=30)
     nickname = models.CharField(max_length=20, unique=True)
     phone_number = models.CharField(max_length=20, unique=True)
-    password = models.CharField(max_length=130)
+    password = models.CharField(max_length=130, null=False, blank=False)
     provider = models.CharField(max_length=10, choices=[("LOCAL", "Local"), ("KAKAO", "Kakao")], default="LOCAL")
+    provider_id = models.CharField(max_length=20, null=True, blank=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -67,22 +68,11 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
             return True
         return False
 
-    def delete(self, *args, **kwargs):
-        # OneToOne 관계 확인 후 삭제
-        for field in self._meta.get_fields():
-            if isinstance(field, models.OneToOneField):
-                related_obj = getattr(self, field.name, None)
-                if related_obj:
-                    related_obj.delete()
-
-        # 이후 user 삭제
-        super().delete(*args, **kwargs)
-
     class Meta:
         db_table = "user"
 
 
-class Student(BaseModel):
+class Student(BaseModel, SoftDeleteModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     class Meta:
@@ -92,7 +82,7 @@ class Student(BaseModel):
         return f"{self.user.name}"
 
 
-class Instructor(BaseModel):
+class Instructor(BaseModel, SoftDeleteModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     experience = models.CharField(max_length=1000, null=True, blank=True)
 
