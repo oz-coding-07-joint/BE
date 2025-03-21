@@ -84,11 +84,16 @@ class LectureChapterSerializer(serializers.ModelSerializer):
         file_name = os.path.basename(obj.material_url.name)  # 원본 파일명 추출
         original_file_name = self.extract_original_filename(file_name)  # UUID 제거
 
-        request = self.context.get("request")
-        user_id = request.user.id if request else None  # 사용자 ID 가져오기
-        signed_url = generate_material_signed_url(obj.material_url.name, user_id)  # 새로운 Signed URL 생성
+        signed_url = generate_material_signed_url(
+            object_key=obj.material_url.name,
+            original_filename=original_file_name,  # 이게 다운로드 파일명으로 사용됨
+        )
 
-        return {"file_name": original_file_name, "download_url": signed_url}
+        return {
+            "file_name": original_file_name,  # 사용자에게 보여줄 이름
+            "object_key": obj.material_url.name,
+            "download_url": signed_url,  # 서명된 S3 다운로드 URL
+        }
 
     @staticmethod
     def extract_original_filename(file_name):

@@ -127,7 +127,13 @@ class LectureChapterListView(APIView):
                 for chapter in data:
                     material_info = chapter.get("material_info")
                     if material_info:
-                        material_info["download_url"] = generate_material_signed_url(material_info.get("file_name"))
+                        object_key = material_info["object_key"]
+                        original_file_name = material_info["file_name"]
+
+                        material_info["download_url"] = generate_material_signed_url(
+                            object_key,
+                            original_filename=original_file_name
+                        )
 
                 return Response(data, status=status.HTTP_200_OK)
 
