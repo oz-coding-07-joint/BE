@@ -404,7 +404,6 @@ class WithdrawalView(APIView):
     def delete(self, request):
         user = request.user
         # 소셜 유저라면 소셜 로그인을 먼저 끊어주기 위한 if문
-        print(user.provider_id)
         if user.provider_id is not None:
             try:
                 # 엑세스토큰 refresh 요청
