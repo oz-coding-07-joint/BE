@@ -2,6 +2,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken
 from rest_framework_simplejwt.utils import get_md5_hash_password
 from rest_framework_simplejwt.settings import api_settings
+from django.utils.translation import gettext_lazy as _
 
 class AllowInactiveUserJWTAuthentication(JWTAuthentication):
     def get_user(self, validated_token):
@@ -19,8 +20,8 @@ class AllowInactiveUserJWTAuthentication(JWTAuthentication):
             raise AuthenticationFailed(_("User not found"), code="user_not_found")
 
         # is_active가 true인지 검사하는 부분 주석처리
-        if api_settings.CHECK_USER_IS_ACTIVE and user.is_active:
-            raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
+        # if api_settings.CHECK_USER_IS_ACTIVE and not user.is_active:
+        #     raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
 
         if api_settings.CHECK_REVOKE_TOKEN:
             if validated_token.get(
