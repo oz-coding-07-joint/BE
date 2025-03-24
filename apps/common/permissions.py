@@ -38,6 +38,7 @@ class IsActiveStudentOrInstructor(BasePermission):
     Attributes:
         message (str): 권한 거부 시 반환할 메시지.
     """
+
     message = "수강 중인 학생 또는 강사만 이 작업을 수행할 수 있습니다."
 
     def has_permission(self, request, view):

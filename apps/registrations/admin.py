@@ -11,6 +11,7 @@ class EnrollmentAdmin(BaseModelAdmin):
 
     Enrollment 인스턴스의 리스트 뷰에서 표시할 필드와 검색 기능을 정의.
     """
+
     list_display = ("course_title", "student", "is_active", "created_at", "updated_at")
     search_fields = ("course__title", "student__user__email", "student__user__username")
 

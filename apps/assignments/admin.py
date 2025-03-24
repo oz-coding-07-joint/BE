@@ -10,6 +10,7 @@ class AssignmentAdmin(BaseModelAdmin):
 
     Assignment 인스턴스의 리스트 뷰에서 표시할 필드와 검색 기능을 정의.
     """
+
     list_display = ("title", "file_url", "chapter_video", "created_at", "updated_at")
     search_fields = ("title", "content")
 
@@ -20,6 +21,7 @@ class AssignmentCommentAdmin(BaseModelAdmin):
 
     AssignmentComment 인스턴스의 리스트 뷰에서 표시할 필드와 검색 기능을 정의.
     """
+
     list_display = (
         "assignment_title",
         "user_nickname",
