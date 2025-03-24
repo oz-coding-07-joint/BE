@@ -41,7 +41,7 @@ from .serializers import (
 class RedisKeys:
     """
     Redis 관련 이메일 상수 클래스
-    
+
     VERIFIED_EMAIL: 이미 인증된 이메일 cache
     EMAIL_VERIFICATION: 특정 이메일에 보낸 인증코드 cache
     EMAIL_REQUEST_LIMIT: 인증 요청을 이미 보낸 이메일 검증 cache
@@ -79,7 +79,7 @@ class RedisKeys:
 class SendEmailVerificationCodeView(APIView):
     """
     이메일 인증 요청 보내는 API
-    
+
     1. 이메일 인증 요청을 보낼 때 이미 가입된 이메일인지 확인
     2. 이미 인증이 완료된 이메일인지 확인
     3. EMAIL_REQUEST_LIMIT으로 이메일 요청 테러 방지(30초 제한)
@@ -169,7 +169,7 @@ class SendEmailVerificationCodeView(APIView):
 class VerifyEmailCodeView(APIView):
     """
     이메일 인증 확인하는 API
-    
+
     1. 요청 이메일과 인증코드를 입력 받아옴
     2. 요청 이메일을 key로 가진 인증코드를 가져옴
     3. 인증이 성공되어 cache된 인증코드가 삭제된 상태일 때 400 error
