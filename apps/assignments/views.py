@@ -17,7 +17,11 @@ from .serializers import (
 
 
 class AssignmentView(APIView):
-    # 수강 중인 학생 또는 강사만 접근할 수 있음.
+    """강의 챕터별 과제 목록 조회 API.
+
+    수강 중인 학생 또는 강사만 접근할 수 있도록 IsActiveStudentOrInstructor 퍼미션을 사용.
+    """
+
     permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
@@ -29,8 +33,18 @@ class AssignmentView(APIView):
         },
         tags=["Assignment"],
     )
-    # 강의 챕터별 과제 목록 조회
     def get(self, request, lecture_chapter_id):
+        """lecture_chapter_id를 기반으로 과제 목록을 조회.
+
+        캐싱(Redis)을 사용하여 조회 성능을 개선.
+
+        Args:
+            request (Request): 요청 객체.
+            lecture_chapter_id (int): 강의 챕터의 식별자.
+
+        Returns:
+            Response: 과제 목록과 lecture_chapter_id를 포함한 응답.
+        """
         if lecture_chapter_id <= 0:
             return Response({"error": "잘못된 lecture_chapter_id 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -40,7 +54,6 @@ class AssignmentView(APIView):
         if cached_data:
             assignments_data = json.loads(cached_data)
         else:
-            # lecture_chapter_id에 연결된 과제들을 조회
             assignments = Assignment.objects.filter(chapter_video__lecture_chapter__id=lecture_chapter_id)
             serializer = AssignmentSerializer(assignments, many=True)
             assignments_data = serializer.data
@@ -58,7 +71,12 @@ class AssignmentView(APIView):
 
 
 class AssignmentCommentView(APIView):
-    # 수강 중인 학생 또는 강사만 접근할 수 있음.
+    """과제 제출 및 피드백 API.
+
+    GET 요청: 수강생 또는 강사가 과제 관련 최상위 댓글 및 피드백 조회.
+    POST 요청: 강의 과제 제출 (학생은 대댓글 작성 불가).
+    """
+
     permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
@@ -70,11 +88,17 @@ class AssignmentCommentView(APIView):
         },
         tags=["Assignment"],
     )
-    # 수강생 과제 및 피드백 목록 조회
     def get(self, request, assignment_id):
-        """
-        학생이 제출한 과제는 정적으로 조회,
-        과제 피드백은 시리얼라이저 내의 replies 필드로 동적으로 처리
+        """특정 과제의 최상위 댓글을 조회.
+
+        강사인 경우 모든 댓글을 조회하고, 학생인 경우 자신이 작성한 댓글만 조회.
+
+        Args:
+            request (Request): 요청 객체.
+            assignment_id (int): 과제의 식별자.
+
+        Returns:
+            Response: 직렬화된 댓글 목록.
         """
         if hasattr(request.user, "instructor"):
             # 강사는 해당 과제에 속한 모든 최상위 댓글을 조회
@@ -99,14 +123,30 @@ class AssignmentCommentView(APIView):
         },
         tags=["Assignment"],
     )
-    # 강의 과제 제출
     def post(self, request, assignment_id):
+        """특정 과제에 대해 과제 제출을 처리.
+
+        - 강사는 대댓글 작성이 가능하며 학생은 대댓글 작성이 불가능.
+        - 요청 데이터는 클라이언트에서 content, file_url, parent만 전송하며
+          assignment와 request.user 정보는 context를 통해 전달.
+
+        Args:
+            request (Request): 요청 객체.
+            assignment_id (int): 과제의 식별자.
+
+        Returns:
+            Response: 과제 제출 성공 또는 오류 메시지를 포함한 응답.
+
+        Raises:
+            Response with HTTP_404_NOT_FOUND: 과제를 찾을 수 없는 경우.
+            Response with HTTP_403_FORBIDDEN: 학생이 대댓글을 작성하려 할 때.
+            Response with HTTP_400_BAD_REQUEST: 직렬화된 데이터에 오류가 있는 경우.
+        """
         try:
             assignment = Assignment.objects.get(id=assignment_id)
         except Assignment.DoesNotExist:
             return Response({"detail": "해당 과제를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 강사는 대댓글 작성이 가능하지만, 학생은 대댓글 작성 불가
         if request.data.get("parent") and not hasattr(request.user, "instructor"):
             return Response({"detail": "대댓글 작성은 강사만 가능합니다."}, status=status.HTTP_403_FORBIDDEN)
 
