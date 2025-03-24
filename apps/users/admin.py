@@ -51,6 +51,9 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
+        
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser  # superuser만 삭제 가능
 
     def delete_model(self, request, obj):
         count = 0
