@@ -41,6 +41,12 @@ from .serializers import (
 class RedisKeys:
     """
     Redis 관련 이메일 상수 클래스
+
+    VERIFIED_EMAIL: 이미 인증된 이메일 cache
+    EMAIL_VERIFICATION: 특정 이메일에 보낸 인증코드 cache
+    EMAIL_REQUEST_LIMIT: 인증 요청을 이미 보낸 이메일 검증 cache
+    KAKAO_ACCESS_TOKEN: 카카오에서 발급받은 엑세스 토큰 cache
+    KAKAO_REFRESH_TOKEN: 카카오에서 발급받은 리프레시 토큰 cache
     """
 
     VERIFIED_EMAIL = "verified_email_{email}"
@@ -73,6 +79,12 @@ class RedisKeys:
 class SendEmailVerificationCodeView(APIView):
     """
     이메일 인증 요청 보내는 API
+
+    1. 이메일 인증 요청을 보낼 때 이미 가입된 이메일인지 확인
+    2. 이미 인증이 완료된 이메일인지 확인
+    3. EMAIL_REQUEST_LIMIT으로 이메일 요청 테러 방지(30초 제한)
+    4. 이 이메일key를 가진 캐시된 코드가 있는지 확인
+    5. 인증코드 전송
     """
 
     authentication_classes = ()
@@ -127,10 +139,10 @@ class SendEmailVerificationCodeView(APIView):
         if not success:
             verification_code = redis_client.get(RedisKeys.get_email_verification_key(email))
 
-        # Rate Limiting 적용 (30초 동안 재요청 불가) / [email_request_limit_key]가 저장되는 부분
+        # 이메일 테러를 방지하기 위해 Rate Limiting 적용 (30초 동안 재요청 불가)
         redis_client.setex(RedisKeys.get_email_request_limit_key(email), 30, "1")
 
-        # 이메일 전송
+        # 인증코드 전송
         try:
             send_mail(
                 subject="소리상상 이메일 인증 코드입니다",
@@ -157,6 +169,14 @@ class SendEmailVerificationCodeView(APIView):
 class VerifyEmailCodeView(APIView):
     """
     이메일 인증 확인하는 API
+
+    1. 요청 이메일과 인증코드를 입력 받아옴
+    2. 요청 이메일을 key로 가진 인증코드를 가져옴
+    3. 인증이 성공되어 cache된 인증코드가 삭제된 상태일 때 400 error
+    4. redis에서 가져온 데이트가 byte type일수도 있어서 decode
+    5. 인증코드가 cache된 코드와 같은지 확인
+    6. 인증코드가 올바르면 요청 이메일을 redis에 cache해서 회원가입 때 인증이 완료된 이메일인지 확인
+    7. 사용된 인증코드는 삭제처리
     """
 
     authentication_classes = ()
@@ -298,6 +318,7 @@ class TokenRefreshView(APIView):
     access와 refresh token을 발급해주는 API
     """
 
+    permission_classes = (AllowAny,)
     authentication_classes = [AllowInactiveUserJWTAuthentication]
 
     def post(self, request):
