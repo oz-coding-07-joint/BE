@@ -23,6 +23,10 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
 
+        form.base_fields["provider_id"].required = False  # 필수 입력 해제
+        form.base_fields["provider_id"].disabled = True  # 비활성화
+
+        # 슈퍼유저가 아닐 경우 아래 두 필드를 비활성화
         if not request.user.is_superuser:
             form.base_fields["is_superuser"].disabled = True
             form.base_fields["is_staff"].disabled = True
@@ -51,6 +55,9 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
             obj.password = make_password(obj.password)
 
         super().save_model(request, obj, form, change)
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser  # superuser만 삭제 가능
 
     def delete_model(self, request, obj):
         count = 0

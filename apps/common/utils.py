@@ -126,7 +126,17 @@ def class_lecture_file_path(instance, filename):
 
 
 def assignment_material_path(instance, filename):
-    """과제 자료 저장 경로 생성 함수"""
+    """과제 자료 저장 경로를 생성합니다.
+
+    과제 인스턴스의 pk와 강의 정보를 기반으로 파일 저장 경로를 결정.
+
+    Args:
+        instance: 파일을 저장할 Assignment 인스턴스.
+        filename (str): 업로드할 파일의 원본 이름.
+
+    Returns:
+        str: 생성된 파일 저장 경로.
+    """
     unique_filename = generate_unique_filename(filename)
 
     # instance는 이미 Assignment 인스턴스이므로, pk가 있다면 사용, 없다면 'new'로 처리
@@ -142,7 +152,20 @@ def assignment_material_path(instance, filename):
 
 
 def assignment_comment_file_path(instance, filename):
-    """학생 제출 파일과 강사 피드백 파일을 구분하여 저장 경로 설정"""
+    """학생 제출 파일과 강사 피드백 파일의 저장 경로를 설정.
+
+    파일을 저장할 때 assignment의 pk와 사용자 정보에 따라 폴더를 구분.
+
+    Args:
+        instance: 파일을 저장할 AssignmentComment 인스턴스.
+        filename (str): 업로드할 파일의 원본 이름.
+
+    Returns:
+        str: 생성된 파일 저장 경로.
+
+    Raises:
+        ValueError: Assignment 정보가 없거나 Assignment의 pk가 없을 경우.
+    """
     if not instance.assignment or not instance.assignment.pk:
         raise ValueError("Assignment 정보가 없어서 파일 경로를 생성할 수 없습니다.")
 
@@ -158,7 +181,11 @@ def assignment_comment_file_path(instance, filename):
 
 
 def delete_file_from_ncp(file_path):
-    """NCP Object Storage에서 파일 삭제"""
+    """NCP Object Storage에서 파일을 삭제.
+
+    Args:
+        file_path (str): 삭제할 파일의 경로.
+    """
     if not file_path:
         return
 

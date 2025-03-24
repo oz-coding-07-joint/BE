@@ -17,6 +17,11 @@ from .serializers import (
 
 
 class ReviewView(APIView):
+    """수업 후기 조회 및 등록 API.
+
+    GET 요청은 특정 강의의 후기를 조회하며, POST 요청은 후기를 등록.
+    인증은 POST 요청에만 적용.
+    """
 
     def get_authenticators(self):
         if not hasattr(self, "request") or self.request is None:
@@ -39,17 +44,22 @@ class ReviewView(APIView):
         },
         tags=["Review"],
     )
-    # 수업 후기 조회
     def get(self, request, lecture_id):
+        """특정 강의의 후기를 조회.
+
+        Args:
+            request (Request): 요청 객체.
+            lecture_id (int): 후기를 조회할 강의의 식별자.
+
+        Returns:
+            Response: 후기가 존재할 경우 직렬화된 데이터, 없으면 오류 메시지.
+        """
         reviews = Review.objects.filter(lecture_id=lecture_id)
         if reviews.exists():
             serializer = ReviewSerializer(reviews, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({"error": "강의 후기를 찾을 수 없습니다"}, status=status.HTTP_404_NOT_FOUND)
-
-    # -----------------------------------------------------------------------------------------------------------------------
-    # -----------------------------------------------------------------------------------------------------------------------
 
     @extend_schema(
         summary="후기 등록",
@@ -61,8 +71,19 @@ class ReviewView(APIView):
         },
         tags=["Review"],
     )
-    # 후기 등록
     def post(self, request, lecture_id):
+        """강의 후기를 등록.
+
+        - 수강 중인 학생만 후기를 등록할 수 있음.
+        - 한 강의당 한 번만 후기를 작성할 수 있음.
+
+        Args:
+            request (Request): 요청 객체.
+            lecture_id (int): 후기를 등록할 강의의 식별자.
+
+        Returns:
+            Response: 리뷰 등록 성공 또는 오류 메시지를 포함한 응답.
+        """
         try:
             lecture = Lecture.objects.get(id=lecture_id)
         except Lecture.DoesNotExist:
@@ -94,14 +115,26 @@ class ReviewView(APIView):
 
 
 class MyReviewListView(APIView):
+    """내가 작성한 후기 조회 API.
+
+    현재 로그인한 사용자가 작성한 후기를 반환.
+    """
+
     @extend_schema(
         summary="내가 작성한 후기 조회",
         description="현재 로그인한 사용자가 작성한 후기를 조회합니다.",
         responses={200: ReviewDetailSerializer(many=True)},
         tags=["Review"],
     )
-    # 내가 작성한 후기 조회
     def get(self, request):
+        """로그인한 학생이 작성한 후기를 조회.
+
+        Args:
+            request (Request): 요청 객체.
+
+        Returns:
+            Response: 후기가 존재할 경우 직렬화된 데이터 없으면 오류 메시지.
+        """
         if not request.user or not request.user.is_authenticated:
             return Response({"detail": "유효하지 않은 요청입니다."}, status=status.HTTP_400_BAD_REQUEST)
 

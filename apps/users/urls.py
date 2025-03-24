@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import (  # CustomSocialLoginView,
+from .views import (
     ChangePasswordView,
     KakaoAuthView,
     LoginView,
