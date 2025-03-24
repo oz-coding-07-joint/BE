@@ -96,13 +96,17 @@ class LectureChapterSerializer(serializers.ModelSerializer):
     @staticmethod
     def extract_original_filename(file_name):
         """
-        파일명에서 UUID 및 접두어(materials_) 제거하여 원래 파일명만 반환
+        파일명에서 UUID 및 구분자 (_) 제거하여 원래 파일명만 반환
         """
-        pattern = r"^(?:materials_)?[\w-]+_([\w가-힣.-]+)$"
+        # 파일명과 확장자 분리
+        name, ext = os.path.splitext(file_name)
 
-        match = re.match(pattern, file_name)
+        # UUID 패턴: 8-4-4-4-12 (총 36자)
+        pattern = r"^(?:materials_)?(.*)_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
+
+        match = re.match(pattern, name)
         if match:
-            return match.group(1)  # UUID 제거 후 원래 파일명 반환
+            return f"{match.group(1)}{ext}"  # UUID 제거된 파일명 + 확장자
         return file_name  # 매칭 안 되면 기존 파일명 반환
 
     def generate_signed_url(self, obj):
