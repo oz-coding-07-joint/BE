@@ -75,10 +75,10 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
 
 
 @admin.register(Student)
-class StudentAdmin(BaseModelAdmin):
-    list_display = ("get_user_email", "get_user_name", "created_at", "updated_at")
+class StudentAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
+    list_display = ("get_user_email", "get_user_name", "created_at", "updated_at", "deleted_at")
     search_fields = ("user__email", "user__name")
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at", "updated_at", "deleted_at")
 
     def get_user_email(self, obj):
         return obj.user.email
@@ -91,10 +91,10 @@ class StudentAdmin(BaseModelAdmin):
 
 
 @admin.register(Instructor)
-class InstructorAdmin(BaseModelAdmin):
-    list_display = ("get_user_email", "get_user_name", "experience", "created_at", "updated_at")
+class InstructorAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
+    list_display = ("get_user_email", "get_user_name", "experience", "created_at", "updated_at", "deleted_at")
     search_fields = ("user__email", "user__name", "experience")
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at", "updated_at", "deleted_at")
 
     def get_user_email(self, obj):
         return obj.user.email
