@@ -60,18 +60,25 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
         return request.user.is_superuser  # superuser만 삭제 가능
 
     def delete_model(self, request, obj):
-        count = 0
+        """단일 객체 삭제 시 하드 딜리트 적용"""
         if isinstance(obj, SoftDeleteModel):
             obj.hard_delete()
-            count += 1
+        messages.success(request, "영구 삭제되었습니다.")
+
+    def delete_queryset(self, request, queryset):
+        """다중 객체 삭제 시 하드 딜리트 적용"""
+        count = queryset.count()
+        for obj in queryset:
+            if isinstance(obj, SoftDeleteModel):
+                obj.hard_delete()
         messages.success(request, f"{count}개 항목이 영구 삭제되었습니다.")
 
 
 @admin.register(Student)
-class StudentAdmin(BaseModelAdmin):
-    list_display = ("get_user_email", "get_user_name", "created_at", "updated_at")
+class StudentAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
+    list_display = ("get_user_email", "get_user_name", "created_at", "updated_at", "deleted_at")
     search_fields = ("user__email", "user__name")
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at", "updated_at", "deleted_at")
 
     def get_user_email(self, obj):
         return obj.user.email
@@ -84,10 +91,10 @@ class StudentAdmin(BaseModelAdmin):
 
 
 @admin.register(Instructor)
-class InstructorAdmin(BaseModelAdmin):
-    list_display = ("get_user_email", "get_user_name", "experience", "created_at", "updated_at")
+class InstructorAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
+    list_display = ("get_user_email", "get_user_name", "experience", "created_at", "updated_at", "deleted_at")
     search_fields = ("user__email", "user__name", "experience")
-    list_filter = ("created_at", "updated_at")
+    list_filter = ("created_at", "updated_at", "deleted_at")
 
     def get_user_email(self, obj):
         return obj.user.email
