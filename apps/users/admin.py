@@ -64,7 +64,7 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
         if isinstance(obj, SoftDeleteModel):
             obj.hard_delete()
         messages.success(request, "영구 삭제되었습니다.")
-    
+
     def delete_queryset(self, request, queryset):
         """다중 객체 삭제 시 하드 딜리트 적용"""
         count = queryset.count()
