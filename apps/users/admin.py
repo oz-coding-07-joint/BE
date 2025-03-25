@@ -60,10 +60,17 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
         return request.user.is_superuser  # superuser만 삭제 가능
 
     def delete_model(self, request, obj):
-        count = 0
+        """단일 객체 삭제 시 하드 딜리트 적용"""
         if isinstance(obj, SoftDeleteModel):
             obj.hard_delete()
-            count += 1
+        messages.success(request, "영구 삭제되었습니다.")
+    
+    def delete_queryset(self, request, queryset):
+        """다중 객체 삭제 시 하드 딜리트 적용"""
+        count = queryset.count()
+        for obj in queryset:
+            if isinstance(obj, SoftDeleteModel):
+                obj.hard_delete()
         messages.success(request, f"{count}개 항목이 영구 삭제되었습니다.")
 
 
