@@ -2,14 +2,13 @@ import random
 import smtplib
 import uuid
 
-from rest_framework import serializers
 import requests
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -260,7 +259,7 @@ class SignUpView(APIView):
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
                 return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
-            
+
             except serializers.ValidationError as e:
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
