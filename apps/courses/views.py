@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from apps.common.permissions import IsEnrolledStudent
 from apps.common.utils import (
-    generate_material_signed_url,
+    generate_download_signed_url,
     generate_ncp_signed_url,
     redis_client,
 )
@@ -130,7 +130,7 @@ class LectureChapterListView(APIView):
                         object_key = material_info["object_key"]
                         original_file_name = material_info["file_name"]
 
-                        material_info["download_url"] = generate_material_signed_url(
+                        material_info["download_url"] = generate_download_signed_url(
                             object_key, original_filename=original_file_name
                         )
 
@@ -152,7 +152,7 @@ class LectureChapterListView(APIView):
                     original_file_name = material_info.get("file_name")
 
                     if object_key and original_file_name:
-                        material_info["download_url"] = generate_material_signed_url(
+                        material_info["download_url"] = generate_download_signed_url(
                             object_key,
                             original_filename=original_file_name,
                         )
@@ -170,7 +170,7 @@ class LectureChapterListView(APIView):
                     object_key = material_info["object_key"]
                     original_file_name = material_info["file_name"]
 
-                    material_info["download_url"] = generate_material_signed_url(
+                    material_info["download_url"] = generate_download_signed_url(
                         object_key,
                         original_filename=original_file_name,
                     )
