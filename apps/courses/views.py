@@ -106,8 +106,8 @@ class LectureChapterListView(APIView):
     permission_classes = [IsEnrolledStudent]
 
     @extend_schema(
-        summary="과목의 챕터 및 강의 영상 제목 목록 조회",
-        description="특정 과목의 챕터 목록과 해당 강의 영상 제목을 조회합니다. 와이어프레임의 수업 자료 상세 페이지입니다.",
+        summary="과목의 챕터 및 학습자료, 강의 영상 제목 목록 조회",
+        description="특정 과목의 챕터 목록과 학습자료 download url, 해당 강의 영상 제목을 조회합니다. 와이어프레임의 수업 자료 상세 페이지입니다.",
         responses={
             200: LectureChapterSerializer(many=True),
             404: OpenApiResponse(description="해당 챕터를 찾을 수 없음"),
