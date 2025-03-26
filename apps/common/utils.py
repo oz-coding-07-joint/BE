@@ -44,7 +44,7 @@ def generate_ncp_signed_url(object_key, expiration=60 * 30):
     return signed_url
 
 
-def generate_material_signed_url(object_key, expiration=300, original_filename=None):
+def generate_download_signed_url(object_key, expiration=3600, original_filename=None):
     """
     NCP Object Storage용 학습 자료 다운로드 Signed URL 생성
     :param object_key: 파일 경로
