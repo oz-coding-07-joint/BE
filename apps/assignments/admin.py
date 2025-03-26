@@ -11,8 +11,26 @@ class AssignmentAdmin(BaseModelAdmin):
     Assignment 인스턴스의 리스트 뷰에서 표시할 필드와 검색 기능을 정의.
     """
 
-    list_display = ("title", "file_url", "chapter_video", "created_at", "updated_at")
+    list_display = ("title", "file_url", "chapter_video", "get_lecture_chapter_id", "created_at", "updated_at")
     search_fields = ("title", "content")
+    readonly_fields = ("get_lecture_chapter_id",)
+
+    def get_lecture_chapter_id(self, obj):
+        """연결된 ChapterVideo의 lecture_chapter ID를 반환.
+
+        Args:
+            obj (Assignment): Assignment 인스턴스.
+
+        Returns:
+            int or None: 연결된 lecture_chapter의 ID, 존재하지 않으면 None.
+        """
+        return (
+            obj.chapter_video.lecture_chapter.id
+            if obj.chapter_video and hasattr(obj.chapter_video, "lecture_chapter")
+            else None
+        )
+
+    get_lecture_chapter_id.short_description = "Lecture Chapter ID"
 
 
 @admin.register(AssignmentComment)
