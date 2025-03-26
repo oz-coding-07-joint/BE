@@ -1,8 +1,10 @@
-from django.db.models.signals import pre_save, post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from apps.common.utils import redis_client
+
 from .models import Assignment
+
 
 @receiver(pre_save, sender=Assignment)
 def clear_assignment_cache_pre_save(sender, instance, **kwargs):
