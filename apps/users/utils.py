@@ -71,3 +71,17 @@ def validate_user_phone_number(phone_number):
         raise serializers.ValidationError("이미 등록된 휴대폰 번호입니다.")
 
     return phone_number
+
+
+def validate_user_info(phone_number, nickname):
+    if User.objects.filter(nickname=nickname).exists():
+        raise serializers.ValidationError({"nickname": ["이미 사용 중인 닉네임입니다."]})
+
+    if User.objects.filter(phone_number=phone_number).exists():
+        raise serializers.ValidationError({"phone_number": ["이미 사용 중인 전화번호입니다."]})
+
+    if User.deleted_objects.filter(nickname=nickname).exists():
+        raise serializers.ValidationError({"nickname": ["이 닉네임은 사용이 불가능합니다."]})
+
+    if User.deleted_objects.filter(phone_number=phone_number).exists():
+        raise serializers.ValidationError({"phone_number": ["이 전화번호는 사용이 불가능합니다."]})

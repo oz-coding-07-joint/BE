@@ -8,7 +8,7 @@ from rest_framework_simplejwt.utils import get_md5_hash_password
 class AllowInactiveUserJWTAuthentication(JWTAuthentication):
     def get_user(self, validated_token):
         """
-        Attempts to find and return a user using the given validated token.
+        is_active가 false여도 JWT 인증이 통과될 수 있게 오버라이딩
         """
         try:
             user_id = validated_token[api_settings.USER_ID_CLAIM]

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.common.permissions import IsActiveStudentOrInstructor
-from apps.common.utils import redis_client
+from apps.common.utils import generate_download_signed_url, redis_client
 
 from .models import Assignment, AssignmentComment
 from .serializers import (
@@ -36,7 +36,8 @@ class AssignmentView(APIView):
     def get(self, request, lecture_chapter_id):
         """lecture_chapter_id를 기반으로 과제 목록을 조회.
 
-        캐싱(Redis)을 사용하여 조회 성능을 개선.
+        Redis 캐싱을 사용하여 조회 성능을 개선하며
+        캐시된 데이터가 있을 경우 download_info의 URL을 갱신
 
         Args:
             request (Request): 요청 객체.
@@ -53,9 +54,20 @@ class AssignmentView(APIView):
 
         if cached_data:
             assignments_data = json.loads(cached_data)
+            # 캐시된 데이터 내 download_info 갱신: URL 유효시간 등 만료된 정보를 업데이트
+            for assignment in assignments_data:
+                download_info = assignment.get("download_info")
+                if download_info:
+                    object_key = download_info.get("object_key")
+                    file_name = download_info.get("file_name")
+                    # generate_material_signed_url의 expiration 인자 값을 3600초(1시간)으로 사용
+                    new_url = generate_download_signed_url(
+                        object_key=object_key, original_filename=file_name, expiration=3600
+                    )
+                    download_info["download_url"] = new_url
         else:
             assignments = Assignment.objects.filter(chapter_video__lecture_chapter__id=lecture_chapter_id)
-            serializer = AssignmentSerializer(assignments, many=True)
+            serializer = AssignmentSerializer(assignments, many=True, context={"request": request})
             assignments_data = serializer.data
             CACHE_TIMEOUT = 5 * 3600
             redis_client.setex(cache_key, CACHE_TIMEOUT, json.dumps(assignments_data))

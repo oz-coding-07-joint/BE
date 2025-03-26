@@ -9,6 +9,7 @@ from .models import User
 from .utils import (
     validate_signup_terms_agreements,
     validate_user_email,
+    validate_user_info,
     validate_user_password,
     validate_user_phone_number,
 )
@@ -24,6 +25,9 @@ class VerifyEmailCodeSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    student_id = serializers.SerializerMethodField()
+    instructor_id = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -36,7 +40,17 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
             "is_staff",
             "is_superuser",
+            "student_id",
+            "instructor_id",
         )
+
+    def get_student_id(self, obj):
+        """User가 Student와 연결되어 있다면 student_id 반환, 없으면 None"""
+        return obj.student.id if hasattr(obj, "student") else None
+
+    def get_instructor_id(self, obj):
+        """User가 Instructor와 연결되어 있다면 instructor_id 반환, 없으면 None"""
+        return obj.instructor.id if hasattr(obj, "instructor") else None
 
 
 class SocialUserSerializer(serializers.ModelSerializer):
@@ -74,14 +88,7 @@ class SignupSerializer(serializers.ModelSerializer):
         nickname = validated_data.pop("nickname")
         phone_number = validated_data.pop("phone_number")
 
-        if User.objects.filter(nickname=nickname).exists() or User.objects.filter(phone_number=phone_number).exists():
-            raise serializers.ValidationError()
-
-        if (
-            User.deleted_objects.filter(nickname=nickname).exists()
-            or User.deleted_objects.filter(phone_number=phone_number).exists()
-        ):
-            raise serializers.ValidationError()
+        validate_user_info(phone_number, nickname)
 
         # 약관동의 없이 회원가입 될 가능성이 있으니 트랜젝션 처리
         with transaction.atomic():
@@ -132,14 +139,7 @@ class SocialSignupSerializer(serializers.ModelSerializer):
         phone_number = validated_data.pop("phone_number")
         terms_data = validated_data.pop("terms_agreements")
 
-        if User.objects.filter(nickname=nickname).exists() or User.objects.filter(phone_number=phone_number).exists():
-            raise serializers.ValidationError()
-
-        if (
-            User.deleted_objects.filter(nickname=nickname).exists()
-            or User.deleted_objects.filter(phone_number=phone_number).exists()
-        ):
-            raise serializers.ValidationError()
+        validate_user_info(phone_number, nickname)
 
         with transaction.atomic():
             instance.name = name
