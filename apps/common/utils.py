@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 import uuid
 
 import boto3
@@ -63,10 +64,13 @@ def generate_material_signed_url(object_key, expiration=300, original_filename=N
         )
 
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
-
         object_key = object_key.replace(settings.MEDIA_URL, "").lstrip("/")
-
         filename = original_filename or os.path.basename(object_key)
+
+        # UTF-8 percent-encoded filename for non-ASCII names
+        encoded_filename = urllib.parse.quote(filename)
+
+        content_disposition = f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded_filename}"
 
         signed_url = s3_client.generate_presigned_url(
             "get_object",
@@ -74,7 +78,7 @@ def generate_material_signed_url(object_key, expiration=300, original_filename=N
                 "Bucket": bucket_name,
                 "Key": object_key,
                 "ResponseContentType": "application/octet-stream",  #  브라우저가 파일을 무조건 다운로드하도록 지시하는 binary type
-                "ResponseContentDisposition": f'attachment; filename="{filename}"',
+                "ResponseContentDisposition": content_disposition,
                 "ResponseCacheControl": "no-cache",
             },
             ExpiresIn=expiration,
@@ -88,7 +92,7 @@ def generate_material_signed_url(object_key, expiration=300, original_filename=N
 
 
 def generate_unique_filename(filename):
-    """UUID + 원본 파일명 + 확장자로 파일명 생성하는 함수"""
+    """원본 파일명 + UUID + 확장자로 파일명 생성하는 함수"""
     name, ext = os.path.splitext(filename)  # 파일명과 확장자 분리
     return f"{name}_{uuid.uuid4()}{ext}"  # 원본 파일명 + UUID + 확장자
 
