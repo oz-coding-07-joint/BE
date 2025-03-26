@@ -35,12 +35,12 @@ class AssignmentSerializer(serializers.ModelSerializer):
     def get_download_info(self, obj):
         """파일이 존재하면 다운로드 정보를 담은 딕셔너리를 반환.
 
-                Args:
-                    obj (Assignment): 직렬화할 Assignment 인스턴스.
+        Args:
+            obj (Assignment): 직렬화할 Assignment 인스턴스.
 
-                Returns:
-                    dict or None: 파일이 존재할 경우 다운로드 정보 딕셔너리 없으면 None.
-                """
+        Returns:
+            dict or None: 파일이 존재할 경우 다운로드 정보 딕셔너리 없으면 None.
+        """
         if obj.file_url:
             original_file_name = os.path.basename(obj.file_url.name)
             processed_filename = self.extract_original_filename(original_file_name)
@@ -121,12 +121,12 @@ class AssignmentCommentSerializer(serializers.ModelSerializer):
     def get_download_info(self, obj):
         """첨부 파일이 있을 경우, 다운로드 정보를 담은 딕셔너리를 반환.
 
-         Args:
-             obj (AssignmentComment): 직렬화할 댓글 인스턴스.
+        Args:
+            obj (AssignmentComment): 직렬화할 댓글 인스턴스.
 
-         Returns:
-             dict or None: 파일이 있을 경우 다운로드 정보 딕셔너리 없으면 None.
-         """
+        Returns:
+            dict or None: 파일이 있을 경우 다운로드 정보 딕셔너리 없으면 None.
+        """
         if obj.file_url:
             original_file_name = os.path.basename(obj.file_url.name)
             processed_filename = self.extract_original_filename(original_file_name)
