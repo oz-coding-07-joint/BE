@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 
 from ..common.admin import BaseModelAdmin
@@ -11,8 +12,44 @@ class AssignmentAdmin(BaseModelAdmin):
     Assignment 인스턴스의 리스트 뷰에서 표시할 필드와 검색 기능을 정의.
     """
 
-    list_display = ("title", "file_url", "chapter_video", "created_at", "updated_at")
+    list_display = ("title", "file_url", "chapter_video", "get_lecture_chapter_id", "created_at", "updated_at")
     search_fields = ("title", "content")
+    readonly_fields = ("get_lecture_chapter_id",)
+
+    def get_lecture_chapter_id(self, obj):
+        """연결된 ChapterVideo의 lecture_chapter ID를 반환.
+
+        Args:
+            obj (Assignment): Assignment 인스턴스.
+
+        Returns:
+            int or None: 연결된 lecture_chapter의 ID, 존재하지 않으면 None.
+        """
+        return (
+            obj.chapter_video.lecture_chapter.id
+            if obj.chapter_video and hasattr(obj.chapter_video, "lecture_chapter")
+            else None
+        )
+
+    get_lecture_chapter_id.short_description = "Lecture Chapter ID"
+
+
+class ParentAssignmentCommentChoiceField(forms.ModelChoiceField):
+    """부모 AssignmentComment 선택 필드.
+
+    드롭다운 항목에 유저 닉네임, 과제 제목 형식으로 레이블을 표시.
+    """
+
+    def label_from_instance(self, obj):
+        """AssignmentComment 인스턴스로부터 라벨을 생성.
+
+        Args:
+            obj (AssignmentComment): AssignmentComment 인스턴스.
+
+        Returns:
+            str: '유저 닉네임, 과제 제목' 형식의 문자열.
+        """
+        return f"{obj.user.nickname}, {obj.assignment.title}"
 
 
 @admin.register(AssignmentComment)
@@ -58,3 +95,22 @@ class AssignmentCommentAdmin(BaseModelAdmin):
         return getattr(obj.user, "nickname", "")
 
     user_nickname.short_description = "닉네임"
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """외래키 필드에 대해 커스텀 ModelChoiceField를 사용.
+
+        부모 필드(parent)에 대해 ParentAssignmentCommentChoiceField를 적용하여
+        드롭다운 항목에 유저 닉네임, 과제 제목이 표시되도록 재정의.
+
+        Args:
+            db_field: 현재 처리 중인 데이터베이스 필드.
+            request (Request): 요청 객체.
+            **kwargs: 추가 인자.
+
+        Returns:
+            Field: 재정의된 폼 필드.
+        """
+        if db_field.name == "parent":
+            kwargs["queryset"] = AssignmentComment.objects.all()
+            kwargs["form_class"] = ParentAssignmentCommentChoiceField
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
