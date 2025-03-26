@@ -1,6 +1,7 @@
 import os
-import uuid
 import urllib.parse
+import uuid
+
 import boto3
 import redis
 from django.conf import settings
@@ -69,9 +70,7 @@ def generate_material_signed_url(object_key, expiration=300, original_filename=N
         # UTF-8 percent-encoded filename for non-ASCII names
         encoded_filename = urllib.parse.quote(filename)
 
-        content_disposition = (
-            f'attachment; filename="{filename}"; filename*=UTF-8\'\'{encoded_filename}'
-        )
+        content_disposition = f"attachment; filename=\"{filename}\"; filename*=UTF-8''{encoded_filename}"
 
         signed_url = s3_client.generate_presigned_url(
             "get_object",
