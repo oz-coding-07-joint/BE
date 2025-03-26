@@ -4,7 +4,7 @@ import re
 import boto3
 from rest_framework import serializers
 
-from apps.common.utils import generate_material_signed_url
+from apps.common.utils import generate_download_signed_url
 from apps.courses.models import ChapterVideo, Lecture, LectureChapter, ProgressTracking
 from apps.users.models import Instructor, Student
 from config.settings import base
@@ -82,7 +82,7 @@ class LectureChapterSerializer(serializers.ModelSerializer):
         file_name = os.path.basename(obj.material_url.name)  # 원본 파일명 추출
         original_file_name = self.extract_original_filename(file_name)  # UUID 제거
 
-        signed_url = generate_material_signed_url(
+        signed_url = generate_download_signed_url(
             object_key=obj.material_url.name,
             original_filename=original_file_name,  # 이게 다운로드 파일명으로 사용됨
         )
@@ -131,7 +131,7 @@ class LectureChapterSerializer(serializers.ModelSerializer):
                 return None  # Referrer가 허용되지 않으면 Signed URL 제공 안 함
 
         # 새로운 Signed URL 강제 생성
-        return generate_material_signed_url(obj.material_url.name, expiration=300)
+        return generate_download_signed_url(obj.material_url.name, expiration=300)
 
 
 class ProgressTrackingSerializer(serializers.ModelSerializer):
