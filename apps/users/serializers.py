@@ -71,6 +71,15 @@ class SignupSerializer(serializers.ModelSerializer):
         """
         terms_data = validated_data.pop("terms_agreements")
         password = validated_data.pop("password", None)
+        nickname = validated_data.pop("nickname")
+        phone_number = validated_data.pop("phone_number")
+        
+        if User.objects.filter(nickname=nickname).exists() or User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError()
+        
+        if User.deleted_objects.filter(nickname=nickname).exists() or User.deleted_objects.filter(
+                phone_number=phone_number).exists():
+            raise serializers.ValidationError()
 
         # 약관동의 없이 회원가입 될 가능성이 있으니 트랜젝션 처리
         with transaction.atomic():
@@ -122,6 +131,9 @@ class SocialSignupSerializer(serializers.ModelSerializer):
         terms_data = validated_data.pop("terms_agreements")
 
         if User.objects.filter(nickname=nickname).exists() or User.objects.filter(phone_number=phone_number).exists():
+            raise serializers.ValidationError()
+        
+        if User.deleted_objects.filter(nickname=nickname).exists() or User.deleted_objects.filter(phone_number=phone_number).exists():
             raise serializers.ValidationError()
 
         with transaction.atomic():

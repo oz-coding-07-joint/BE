@@ -64,7 +64,7 @@ def validate_user_phone_number(phone_number):
     if not phone_number.isdigit():
         raise serializers.ValidationError("휴대폰 번호는 숫자만 입력해야 합니다.")
 
-    if User.objects.filter(phone_number=phone_number).exists():
+    if User.objects.filter(phone_number=phone_number).exists() or User.deleted_objects.filter(phone_number=phone_number).exists():
         raise serializers.ValidationError("이미 등록된 휴대폰 번호입니다.")
 
     return phone_number
