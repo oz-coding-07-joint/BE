@@ -1,8 +1,8 @@
-import os
 import random
 import smtplib
 import uuid
 
+from rest_framework import serializers
 import requests
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -260,9 +260,12 @@ class SignUpView(APIView):
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
                 return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+            
+            except serializers.ValidationError as e:
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-            except Exception:
-                return Response({"error": "회원가입 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Exception as e:
+                return Response({"error": f"회원가입 중 오류 발생{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -708,17 +711,17 @@ class SocialSignupCompleteView(APIView):
 
         serializer = SocialSignupSerializer(user, data=request.data)
         if serializer.is_valid():
-            # try:
-            with transaction.atomic():
-                user = serializer.save()
-                user.is_active = True  # 계정 활성화
-                user.save()
-                user.refresh_from_db()
-                if not Student.objects.filter(user=user).exists():
-                    Student.objects.create(user=user)
-            return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+            try:
+                with transaction.atomic():
+                    user = serializer.save()
+                    user.is_active = True  # 계정 활성화
+                    user.save()
+                    user.refresh_from_db()
+                    if not Student.objects.filter(user=user).exists():
+                        Student.objects.create(user=user)
+                return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
 
-        #             except Exception as e:
-        #                 return Response({"error": f"추가 정보 입력 중 오류 발생{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except Exception:
+                return Response({"error": f"추가 정보 입력 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
