@@ -14,7 +14,7 @@ def delete_related_table(sender, instance, **kwargs):
         ProgressTracking.objects.filter(student=instance.student).delete()
         Enrollment.objects.filter(student=instance.student).delete()
         Review.objects.filter(student=instance.student).delete()
-    
+
     # 유저가 강사(Instructor)인 경우
     if hasattr(instance, "instructor"):
         Lecture.objects.filter(instructor=instance.instructor).delete()
