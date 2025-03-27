@@ -750,6 +750,14 @@ class SocialSignupCompleteView(APIView):
                         if not Student.objects.filter(user=user).exists():
                             Student.objects.create(user=user)
                     return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+                
+                except serializers.ValidationError as e:
+                    return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
+                except IntegrityError:
+                    return Response(
+                        {"error": "이미 사용 중인 닉네임 또는 전화번호 입니다."}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
                 except Exception:
                     return Response(
