@@ -487,8 +487,18 @@ class WithdrawalView(APIView):
             except Exception:
                 return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # soft delete 처리 (탈퇴 상태로 저장)
+        # 소프트 삭제하기 전에 닉네임 중복 방지를 위해 uuid로 랜덤한 값을 넣어줌
+        # 17자 이상이면 데이터를 보관하기 보다는 문제를 야기시킬 수 있는 확률을 제거하도록 로직 설정
+        if len(user.nickname) >= 17 or len(user.phone_number) >= 17:
+            user.nickname = uuid.uuid4().hex[:10]
+            user.phone_number = uuid.uuid4().hex[:10]
+        else:
+            user.nickname = user.nickname + " / " + uuid.uuid4().hex[: 17 - len(user.nickname)]
+            user.phone_number = user.phone_number + " / " + uuid.uuid4().hex[: 17 - len(user.phone_number)]
         user.is_active = False
+        user.save()
+
+        # soft delete 처리
         user.delete()
 
         # refresh token 삭제 후 응답 반환
