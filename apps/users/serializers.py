@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from ..terms.models import TermsAgreement
 from ..terms.serializers import TermsAgreementSerializer
+from .exceptions import UserValidationError
 from .models import User
 from .utils import (
     validate_signup_terms_agreements,
@@ -134,8 +135,6 @@ class SocialSignupSerializer(serializers.ModelSerializer):
         phone_number = validated_data.pop("phone_number")
         terms_data = validated_data.pop("terms_agreements")
 
-        validate_user_info(phone_number, nickname)
-
         with transaction.atomic():
             instance.name = name
             instance.nickname = nickname
@@ -151,8 +150,9 @@ class SocialSignupSerializer(serializers.ModelSerializer):
             try:
                 if new_terms:
                     TermsAgreement.objects.bulk_create(new_terms)
+
             except IntegrityError:
-                raise serializers.ValidationError()
+                raise UserValidationError("이미 약관 동의를 하셨습니다.")
 
             return instance
 
@@ -196,17 +196,18 @@ class ChangePasswordSerializer(serializers.Serializer[User]):
     def validate_old_password(self, value):
         user = self.context["request"].user  # 요청에서 사용자 정보 가져오기
         if not user.check_password(value):
-            raise serializers.ValidationError("현재 비밀번호가 일치하지 않습니다.")
+            raise UserValidationError("현재 비밀번호가 일치하지 않습니다.")
         return value
 
     def validate_new_password(self, value):
         old_password = self.initial_data.get("old_password")
         if old_password == value:
-            raise serializers.ValidationError("이전 비밀번호와 같게 설정할 수 없습니다.")
+            raise UserValidationError("이전 비밀번호와 같게 설정할 수 없습니다.")
 
         try:
             validate_user_password(value)
+
         except ValidationError as e:
-            raise serializers.ValidationError(str(e))
+            raise UserValidationError(str(e))
 
         return value

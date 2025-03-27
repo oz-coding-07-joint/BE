@@ -24,6 +24,7 @@ from config.settings.base import (
 )
 
 from .authentications import AllowInactiveUserJWTAuthentication
+from .exceptions import UserValidationError
 from .models import Student, User
 from .serializers import (
     ChangePasswordSerializer,
@@ -78,13 +79,7 @@ class RedisKeys:
 
 class SendEmailVerificationCodeView(APIView):
     """
-    이메일 인증 요청 보내는 API
-
-    1. 이메일 인증 요청을 보낼 때 이미 가입된 이메일인지 확인
-    2. 이미 인증이 완료된 이메일인지 확인
-    3. EMAIL_REQUEST_LIMIT으로 이메일 요청 테러 방지(30초 제한)
-    4. 이 이메일key를 가진 캐시된 코드가 있는지 확인
-    5. 인증코드 전송
+    POST 요청: 이메일 인증 코드를 request.date.email으로 보냄
     """
 
     authentication_classes = ()
@@ -97,6 +92,15 @@ class SendEmailVerificationCodeView(APIView):
         tags=["User"],
     )
     def post(self, request):
+        """
+        이메일 인증 요청 보내는 API
+
+        1. 이메일 인증 요청을 보낼 때 이미 가입된 이메일인지 확인
+        2. 이미 인증이 완료된 이메일인지 확인
+        3. EMAIL_REQUEST_LIMIT으로 이메일 요청 테러 방지(30초 제한)
+        4. 이 이메일key를 가진 캐시된 코드가 있는지 확인
+        5. 인증코드 전송
+        """
         email = request.data.get("email")
 
         if User.objects.filter(email=email, deleted_at__isnull=True).exists():
@@ -167,17 +171,7 @@ class SendEmailVerificationCodeView(APIView):
 
 
 class VerifyEmailCodeView(APIView):
-    """
-    이메일 인증 확인하는 API
-
-    1. 요청 이메일과 인증코드를 입력 받아옴
-    2. 요청 이메일을 key로 가진 인증코드를 가져옴
-    3. 인증이 성공되어 cache된 인증코드가 삭제된 상태일 때 400 error
-    4. redis에서 가져온 데이트가 byte type일수도 있어서 decode
-    5. 인증코드가 cache된 코드와 같은지 확인
-    6. 인증코드가 올바르면 요청 이메일을 redis에 cache해서 회원가입 때 인증이 완료된 이메일인지 확인
-    7. 사용된 인증코드는 삭제처리
-    """
+    """ """
 
     authentication_classes = ()
     permission_classes = (AllowAny,)
@@ -189,6 +183,17 @@ class VerifyEmailCodeView(APIView):
         tags=["User"],
     )
     def post(self, request):
+        """
+        이메일 인증 확인하는 API
+
+        1. 요청 이메일과 인증코드를 입력 받아옴
+        2. 요청 이메일을 key로 가진 인증코드를 가져옴
+        3. 인증이 성공되어 cache된 인증코드가 삭제된 상태일 때 400 error
+        4. redis에서 가져온 데이트가 byte type일수도 있어서 decode
+        5. 인증코드가 cache된 코드와 같은지 확인
+        6. 인증코드가 올바르면 요청 이메일을 redis에 cache해서 회원가입 때 인증이 완료된 이메일인지 확인
+        7. 사용된 인증코드는 삭제처리
+        """
         email = request.data.get("email")
         input_code = request.data.get("code")
 
@@ -351,7 +356,7 @@ class TokenRefreshView(APIView):
             old_refresh = RefreshToken(refresh_token)
             user_id = old_refresh.payload.get("user_id")
             if not user_id:
-                raise Exception("유저 정보가 존재하지 않습니다.")
+                raise UserValidationError("유저 정보가 존재하지 않습니다.")
             user = User.objects.get(id=user_id)
 
             # 기존 refresh token 블랙리스트 처리
@@ -482,8 +487,18 @@ class WithdrawalView(APIView):
             except Exception:
                 return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # soft delete 처리 (탈퇴 상태로 저장)
+        # 소프트 삭제하기 전에 닉네임 중복 방지를 위해 uuid로 랜덤한 값을 넣어줌
+        # 17자 이상이면 데이터를 보관하기 보다는 문제를 야기시킬 수 있는 확률을 제거하도록 로직 설정
+        if len(user.nickname) >= 17 or len(user.phone_number) >= 17:
+            user.nickname = uuid.uuid4().hex[:10]
+            user.phone_number = uuid.uuid4().hex[:10]
+        else:
+            user.nickname = user.nickname + " / " + uuid.uuid4().hex[: 17 - len(user.nickname)]
+            user.phone_number = user.phone_number + " / " + uuid.uuid4().hex[: 17 - len(user.phone_number)]
         user.is_active = False
+        user.save()
+
+        # soft delete 처리
         user.delete()
 
         # refresh token 삭제 후 응답 반환
@@ -568,7 +583,7 @@ class ChangePasswordView(APIView):
 
 
 class KakaoAuthView(APIView):
-    """
+    """소셜 로그인 API
     1. 카카오 인가 코드를 받아 액세스 토큰 요청
     2. 액세스 토큰으로 사용자 정보 조회
     3. 기존 가입된 유저인지 확인 후 JWT 발급 or 추가 정보 요청
@@ -750,6 +765,14 @@ class SocialSignupCompleteView(APIView):
                         if not Student.objects.filter(user=user).exists():
                             Student.objects.create(user=user)
                     return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+
+                except serializers.ValidationError as e:
+                    return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
+                except IntegrityError:
+                    return Response(
+                        {"error": "이미 사용 중인 닉네임 또는 전화번호 입니다."}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
                 except Exception:
                     return Response(
