@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.db import transaction
+from django.db.utils import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
@@ -259,6 +260,11 @@ class SignUpView(APIView):
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
                 return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+
+            except IntegrityError:
+                return Response(
+                    {"error": "이미 사용 중인 닉네임 또는 전화번호 입니다."}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             except serializers.ValidationError as e:
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
