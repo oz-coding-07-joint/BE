@@ -134,8 +134,6 @@ class SocialSignupSerializer(serializers.ModelSerializer):
         phone_number = validated_data.pop("phone_number")
         terms_data = validated_data.pop("terms_agreements")
 
-        validate_user_info(phone_number, nickname)
-
         with transaction.atomic():
             instance.name = name
             instance.nickname = nickname
