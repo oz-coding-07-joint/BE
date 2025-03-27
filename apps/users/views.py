@@ -737,7 +737,7 @@ class SocialSignupCompleteView(APIView):
             or User.deleted_objects.filter(phone_number=phone_number).exists()
         ):
             return Response({"error": "이미 사용 중인 전화번호입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         with transaction.atomic():
             serializer = SocialSignupSerializer(user, data=request.data)
             if serializer.is_valid():
@@ -750,8 +750,10 @@ class SocialSignupCompleteView(APIView):
                         if not Student.objects.filter(user=user).exists():
                             Student.objects.create(user=user)
                     return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
-    
+
                 except Exception:
-                    return Response({"error": f"추가 정보 입력 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+                    return Response(
+                        {"error": f"추가 정보 입력 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
