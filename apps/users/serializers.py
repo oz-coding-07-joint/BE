@@ -53,12 +53,6 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.instructor.id if hasattr(obj, "instructor") else None
 
 
-class SocialUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "provider", "name", "nickname", "phone_number", "is_active", "is_staff", "is_superuser")
-
-
 class SignupSerializer(serializers.ModelSerializer):
     terms_agreements = TermsAgreementSerializer(many=True, write_only=True)
 
@@ -167,9 +161,12 @@ class UpdateMyPageSerializer(serializers.ModelSerializer):
         fields = ("email", "name", "phone_number")
 
     def validate_email(self, email):
-        if self.instance.email == email:
-            return email
-        return validate_user_email(email)
+        # 소셜 로그인 유저가 아닐 때만 이메일 검증 수행
+        if self.instance.provider_id is None:
+            if self.instance.email == email:
+                return email
+            return validate_user_email(email)
+        return self.instance.email  # 소셜 로그인 유저는 기존 이메일 유지
 
     def validate_phone_number(self, phone_number):
         if self.instance.phone_number == phone_number:
