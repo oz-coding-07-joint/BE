@@ -32,7 +32,6 @@ from .serializers import (
     SendEmailVerificationCodeSerializer,
     SignupSerializer,
     SocialSignupSerializer,
-    SocialUserSerializer,
     UpdateMyPageSerializer,
     UserSerializer,
     VerifyEmailCodeSerializer,
@@ -549,9 +548,11 @@ class MyinfoView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            email = serializer.validated_data["email"]
-            if email:
-                redis_client.delete(RedisKeys.get_verified_email_key(email))
+            # 로컬 유저인 경우 redis에서 이메일 캐시 삭제
+            if user.provider_id is None:
+                email = serializer.validated_data["email"]
+                if email:
+                    redis_client.delete(RedisKeys.get_verified_email_key(email))
             return Response({"detail": "회원 정보 변경이 완료되었습니다."}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -669,7 +670,7 @@ class KakaoAuthView(APIView):
         redis_client.setex(RedisKeys.get_kakao_access_token_key(user.provider_id), 5 * 60 * 60, kakao_access_token)
         redis_client.setex(RedisKeys.get_kakao_refresh_token_key(user.provider_id), 5 * 60 * 60, kakao_refresh_token)
 
-        serializer = SocialUserSerializer(user)
+        serializer = UserSerializer(user)
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
 
