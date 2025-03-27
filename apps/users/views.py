@@ -234,6 +234,8 @@ class SignUpView(APIView):
     )
     def post(self, request):
         email = request.data.get("email")
+        nickname = request.data.get("nickname")
+        phone_number = request.data.get("phone_number")
 
         if User.objects.filter(email=email, deleted_at__isnull=True).exists():
             return Response({"detail": "이미 존재하는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -244,35 +246,45 @@ class SignUpView(APIView):
         if is_verified is None:
             return Response({"error": "이메일 인증이 완료되지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 소프트 삭제된 유저인 경우 db 완전 삭제 후 다시 계정 생성
-        if User.deleted_objects.filter(email=email).exists():
-            deleted_user = User.deleted_objects.filter(email=email).first()
-            deleted_user.hard_delete()
+        if User.objects.filter(nickname=nickname).exists() or User.deleted_objects.filter(nickname=nickname).exists():
+            return Response({"error": "이미 사용 중인 닉네임입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
+        if (
+            User.objects.filter(phone_number=phone_number).exists()
+            or User.deleted_objects.filter(phone_number=phone_number).exists()
+        ):
+            return Response({"error": "이미 사용 중인 전화번호입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            # 소프트 삭제된 유저인 경우 db 완전 삭제 후 다시 계정 생성
+            if User.deleted_objects.filter(email=email).exists():
+                deleted_user = User.deleted_objects.filter(email=email).first()
+                deleted_user.hard_delete()
+
+            serializer = SignupSerializer(data=request.data)
+            if serializer.is_valid():
+                try:
                     user = serializer.save()
                     user.refresh_from_db()  # db에 바로 적용이 안되어 id가 orm으로 안 가져와질 수 있으므로 refresh
+
                     if not Student.objects.filter(user=user).exists():
                         Student.objects.create(user=user)
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
-                return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+                    return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
 
-            except IntegrityError:
-                return Response(
-                    {"error": "이미 사용 중인 닉네임 또는 전화번호 입니다."}, status=status.HTTP_400_BAD_REQUEST
-                )
+                except serializers.ValidationError as e:
+                    return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-            except serializers.ValidationError as e:
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                except IntegrityError:
+                    return Response(
+                        {"error": "이미 사용 중인 닉네임 또는 전화번호 입니다."}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
-            except Exception as e:
-                return Response({"error": f"회원가입 중 오류 발생{e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                except Exception:
+                    return Response({"error": f"회원가입 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -702,6 +714,9 @@ class SocialSignupCompleteView(APIView):
     )
     def post(self, request):
         user = request.user
+        nickname = request.data.get("nickname")
+        phone_number = request.data.get("phone_number")
+
         try:
             user = User.objects.get(id=user.id)
         except User.DoesNotExist:
@@ -714,19 +729,29 @@ class SocialSignupCompleteView(APIView):
         if user.is_active:
             return Response({"error": "이미 활성화 된 유저입니다."})
 
-        serializer = SocialSignupSerializer(user, data=request.data)
-        if serializer.is_valid():
-            try:
-                with transaction.atomic():
-                    user = serializer.save()
-                    user.is_active = True  # 계정 활성화
-                    user.save()
-                    user.refresh_from_db()
-                    if not Student.objects.filter(user=user).exists():
-                        Student.objects.create(user=user)
-                return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+        if User.objects.filter(nickname=nickname).exists() or User.deleted_objects.filter(nickname=nickname).exists():
+            return Response({"error": "이미 사용 중인 닉네임입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-            except Exception:
-                return Response({"error": f"추가 정보 입력 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if (
+            User.objects.filter(phone_number=phone_number).exists()
+            or User.deleted_objects.filter(phone_number=phone_number).exists()
+        ):
+            return Response({"error": "이미 사용 중인 전화번호입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        with transaction.atomic():
+            serializer = SocialSignupSerializer(user, data=request.data)
+            if serializer.is_valid():
+                try:
+                    with transaction.atomic():
+                        user = serializer.save()
+                        user.is_active = True  # 계정 활성화
+                        user.save()
+                        user.refresh_from_db()
+                        if not Student.objects.filter(user=user).exists():
+                            Student.objects.create(user=user)
+                    return Response({"detail": "추가 정보 입력 완료!"}, status=status.HTTP_200_OK)
+    
+                except Exception:
+                    return Response({"error": f"추가 정보 입력 중 오류 발생"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
