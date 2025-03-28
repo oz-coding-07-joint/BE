@@ -22,7 +22,7 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        
+
         form.base_fields["provider"].disabled = True
         form.base_fields["provider_id"].required = False  # 필수 입력 해제
         form.base_fields["provider_id"].disabled = True  # 비활성화
