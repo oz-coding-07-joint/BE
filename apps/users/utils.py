@@ -72,3 +72,8 @@ def validate_user_phone_number(phone_number):
         raise UserValidationError("이미 등록된 휴대폰 번호입니다.")
 
     return phone_number
+
+
+def is_valid_email(email):
+    email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return re.match(email_regex, email) is None

@@ -36,6 +36,7 @@ from .serializers import (
     UserSerializer,
     VerifyEmailCodeSerializer,
 )
+from .utils import is_valid_email
 
 
 class RedisKeys:
@@ -102,8 +103,11 @@ class SendEmailVerificationCodeView(APIView):
         """
         email = request.data.get("email")
 
+        if is_valid_email(email):
+            return Response({"error": "올바른 이메일 형식이 아닙니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         if User.objects.filter(email=email, deleted_at__isnull=True).exists():
-            return Response({"detail": "이미 존재하는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "이미 존재하는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 이미 인증된 이메일인지 확인
         if redis_client.get(RedisKeys.get_verified_email_key(email)):
@@ -124,7 +128,7 @@ class SendEmailVerificationCodeView(APIView):
         # 기존 코드가 이미 있거나 만료되지 않은 경우
         if existing_code or not redis_client.ttl(RedisKeys.get_email_verification_key(email)) <= 0:
             return Response(
-                {"message": "인증 코드가 이미 존재합니다. 기존 코드를 사용하세요."},
+                {"error": "인증 코드가 이미 존재합니다. 기존 코드를 사용하세요."},
                 status=status.HTTP_200_OK,
             )
 
@@ -165,7 +169,7 @@ class SendEmailVerificationCodeView(APIView):
             )
 
         return Response(
-            {"message": "인증 코드가 이메일로 전송되었습니다. 5분 이내에 확인해주세요."}, status=status.HTTP_200_OK
+            {"detail": "인증 코드가 이메일로 전송되었습니다. 5분 이내에 확인해주세요."}, status=status.HTTP_200_OK
         )
 
 
@@ -222,7 +226,7 @@ class VerifyEmailCodeView(APIView):
         # 사용된 인증코드는 삭제
         redis_client.delete(RedisKeys.get_email_verification_key(email))
 
-        return Response({"message": "이메일 인증이 완료되었습니다!"}, status=status.HTTP_200_OK)
+        return Response({"detail": "이메일 인증이 완료되었습니다!"}, status=status.HTTP_200_OK)
 
 
 class SignUpView(APIView):
@@ -275,7 +279,7 @@ class SignUpView(APIView):
                         Student.objects.create(user=user)
                     redis_client.delete(RedisKeys.get_verified_email_key(email))
 
-                    return Response({"message": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
+                    return Response({"detail": "회원가입 성공!"}, status=status.HTTP_201_CREATED)
 
                 except serializers.ValidationError as e:
                     return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -304,16 +308,21 @@ class LoginView(APIView):
     )
     def post(self, request):
         email = request.data.get("email")
+
         if not email:
-            return Response({"detail": "이메일을 입력하세요"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "이메일을 입력하세요"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if is_valid_email(email):
+            return Response({"error": "올바른 이메일 형식이 아닙니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         password = request.data.get("password")
         if not password:
-            return Response({"detail": "비밀번호를 입력하세요"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "비밀번호를 입력하세요"}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(email=email, password=password)  # db에 유저가 있는지 검증
 
         if not User.objects.filter(email=email).exists():
-            return Response({"detail": "존재하지 않는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "존재하지 않는 이메일입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not user:
             return Response({"error": "잘못된 비밀번호입니다."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -422,13 +431,13 @@ class LogoutView(APIView):
         # refresh token 블랙리스트 등록
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
-            return Response({"Refresh token 이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Refresh token 이 제공되지 않았습니다."}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()  # 로그아웃 시 refresh token을 블랙리스트에 등록
         except Exception:
-            return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
 
         response = Response({"detail": "로그아웃 되었습니다."}, status=status.HTTP_200_OK)
         response.delete_cookie("refresh_token")
@@ -484,7 +493,7 @@ class WithdrawalView(APIView):
                 token = RefreshToken(refresh_token)
                 token.blacklist()
             except Exception:
-                return Response({"에러발생, 관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "관리자에게 문의해주세요"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 소프트 삭제하기 전에 닉네임 중복 방지를 위해 uuid로 랜덤한 값을 넣어줌
         # 17자 이상이면 데이터를 보관하기 보다는 문제를 야기시킬 수 있는 확률을 제거하도록 로직 설정
@@ -536,6 +545,10 @@ class MyinfoView(APIView):
     )
     def patch(self, request):
         user = request.user
+
+        if is_valid_email(request.data.get("email")):
+            return Response({"error": "올바른 이메일 형식이 아닙니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         ori_user = User.objects.filter(id=user.pk).first()
         # 요청된 데이터 중 비교할 필드만 선택
         update_fields = {key: value for key, value in request.data.items() if key in ["email", "name", "phone_number"]}

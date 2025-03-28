@@ -23,6 +23,7 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
 
+        form.base_fields["provider"].disabled = True
         form.base_fields["provider_id"].required = False  # 필수 입력 해제
         form.base_fields["provider_id"].disabled = True  # 비활성화
 
@@ -76,31 +77,31 @@ class UserAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
-    list_display = ("get_user_email", "get_user_name", "created_at", "updated_at", "deleted_at")
+    list_display = ("get_user_email", "get_user_nickname", "created_at", "updated_at", "deleted_at")
     search_fields = ("user__email", "user__name")
     list_filter = ("created_at", "updated_at", "deleted_at")
 
     def get_user_email(self, obj):
         return obj.user.email
 
-    def get_user_name(self, obj):
-        return obj.user.name
+    def get_user_nickname(self, obj):
+        return obj.user.nickname
 
     get_user_email.short_description = "Email"
-    get_user_name.short_description = "Name"
+    get_user_nickname.short_description = "Nickname"
 
 
 @admin.register(Instructor)
 class InstructorAdmin(BaseModelAdmin, GlobalObjectsModelAdmin):
-    list_display = ("get_user_email", "get_user_name", "experience", "created_at", "updated_at", "deleted_at")
+    list_display = ("get_user_email", "get_user_nickname", "experience", "created_at", "updated_at", "deleted_at")
     search_fields = ("user__email", "user__name", "experience")
     list_filter = ("created_at", "updated_at", "deleted_at")
 
     def get_user_email(self, obj):
         return obj.user.email
 
-    def get_user_name(self, obj):
+    def get_user_nickname(self, obj):
         return obj.user.name
 
     get_user_email.short_description = "Email"
-    get_user_name.short_description = "Name"
+    get_user_nickname.short_description = "Nickname"
