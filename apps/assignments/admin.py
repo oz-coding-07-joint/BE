@@ -37,7 +37,7 @@ class AssignmentAdmin(BaseModelAdmin):
 class ParentAssignmentCommentChoiceField(forms.ModelChoiceField):
     """부모 AssignmentComment 선택 필드.
 
-    드롭다운 항목에 유저 닉네임, 과제 제목, 생성일(년-월-일 시:분) 형식으로 레이블을 표시.
+    드롭다운 항목에 유저 닉네임, 과제 제목, 생성일(년-월-일 시:분:초) 형식으로 레이블을 표시.
     """
 
     def label_from_instance(self, obj):
@@ -47,9 +47,9 @@ class ParentAssignmentCommentChoiceField(forms.ModelChoiceField):
             obj (AssignmentComment): AssignmentComment 인스턴스.
 
         Returns:
-            str: '유저 닉네임, 과제 제목, 생성일(년-월-일 시:분)' 형식의 문자열.
+            str: '유저 닉네임, 과제 제목, 생성일(년-월-일 시:분:초)' 형식의 문자열.
         """
-        formatted_date = obj.created_at.strftime("%Y-%m-%d %H:%M")
+        formatted_date = obj.created_at.strftime("%Y-%m-%d %H:%M:%S")
         return f"{obj.user.nickname}, {obj.assignment.title}, {formatted_date}"
 
 
