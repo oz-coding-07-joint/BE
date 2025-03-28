@@ -67,6 +67,9 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
         if self.is_active and self.is_superuser:
             return True
         return False
+    
+    def __str__(self):
+        return f"{self.nickname} [{self.email}]"
 
     class Meta:
         db_table = "user"
