@@ -60,4 +60,5 @@ def handle_progress_tracking_change(sender, instance, **kwargs):
 @receiver(post_delete, sender=ProgressTracking)
 def handle_progress_tracking_delete(sender, instance, **kwargs):
     """ProgressTracking 삭제 시 캐시 삭제"""
-    clear_student_lecture_cache(instance.student.id)
+    if instance.student_id:
+        clear_student_lecture_cache(instance.student_id)

@@ -68,6 +68,9 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
             return True
         return False
 
+    def __str__(self):
+        return f"{self.nickname} [{self.email}]"
+
     class Meta:
         db_table = "user"
 
