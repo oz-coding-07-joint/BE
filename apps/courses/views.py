@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.common.permissions import IsEnrolledStudent
+from apps.common.permissions import IsActiveStudentOrInstructor, IsEnrolledStudent
 from apps.common.utils import (
     generate_download_signed_url,
     generate_ncp_signed_url,
@@ -31,11 +31,11 @@ from apps.users.models import Student
 class LectureListView(APIView):
     """수강 신청 후 승인된 학생만 접근 가능한 과목 목록 조회"""
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="과목 목록 조회",
-        description="수강 신청 후 승인된 학생만 자신의 과목 목록을 조회할 수 있습니다.",
+        description="수강 중인 학생 또는 강사만 자신의 과목 목록을 조회할 수 있습니다.",
         responses={
             200: LectureListSerializer(many=True),
             302: OpenApiResponse(description="수강 승인되지 않은 사용자 → 강의 소개 페이지로 리다이렉트"),
@@ -44,33 +44,44 @@ class LectureListView(APIView):
         tags=["Course"],
     )
     def get(self, request):
-        student = request.user.student
+        user = request.user
+        is_student = hasattr(user, "student")
+        is_instructor = hasattr(user, "instructor")
 
         # Redis 캐싱 키 설정
-        cache_key = f"student_{student.id}_lectures"
+        cache_key = f"user_{user.id}_lectures"
         cached_data = cache.get(cache_key)
 
         if cached_data:
             return Response(cached_data, status=status.HTTP_200_OK)
 
-        # 수강 중인 강의 목록 조회
-        lectures = Lecture.objects.filter(course__enrollment__student=student, course__enrollment__is_active=True)
-        if not lectures.exists():
-            return Response({"redirect_url": "https://sorisangsang.umdoong.shop/classinfo/harmonics"}, status=302)
+        if is_student:
+            lectures = Lecture.objects.filter(
+                course__enrollment__student=user.student, course__enrollment__is_active=True
+            )
+        elif is_instructor:
+            lectures = Lecture.objects.filter(instructor=user.instructor)
+        else:
+            return Response({"error": "접근 권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
         response_data = []
         for lecture in lectures:
-            total_videos = ChapterVideo.objects.filter(lecture_chapter__lecture=lecture).count()
-            completed_videos = ProgressTracking.objects.filter(
-                chapter_video__lecture_chapter__lecture=lecture, student=student, is_completed=True
-            ).count()
-            progress_rate = (completed_videos / total_videos) * 100 if total_videos > 0 else 0
-
             serialized_lecture = LectureListSerializer(lecture, context={"request": request}).data
-            serialized_lecture["progress_rate"] = round(progress_rate, 2)
+
+            # 학생인 경우만 진행률 포함
+            if is_student:
+                total_videos = ChapterVideo.objects.filter(lecture_chapter__lecture=lecture).count()
+                completed_videos = ProgressTracking.objects.filter(
+                    chapter_video__lecture_chapter__lecture=lecture, student=user.student, is_completed=True
+                ).count()
+                progress_rate = (completed_videos / total_videos) * 100 if total_videos > 0 else 0
+                serialized_lecture["progress_rate"] = round(progress_rate, 2)
+            else:
+                serialized_lecture.pop("progress_rate", None)
+
             response_data.append(serialized_lecture)
 
-        # Redis에 캐싱 (1시간)
+        # 캐싱 (1시간)
         cache.set(cache_key, response_data, timeout=3600)
 
         return Response(response_data, status=status.HTTP_200_OK)
