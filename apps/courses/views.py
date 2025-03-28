@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.common.permissions import IsActiveStudentOrInstructor, IsEnrolledStudent
+from apps.common.permissions import IsActiveStudentOrInstructor
 from apps.common.utils import (
     generate_download_signed_url,
     generate_ncp_signed_url,
@@ -90,7 +90,7 @@ class LectureListView(APIView):
 class LectureDetailView(APIView):
     """과목 상세 조회 (수업정보)"""
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="과목 상세 조회",
@@ -114,7 +114,7 @@ class LectureDetailView(APIView):
 class LectureChapterListView(APIView):
     """과목의 챕터 및 강의 영상 제목 목록 조회 (수업 목록 드롭다운)"""
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="과목의 챕터 및 학습자료, 강의 영상 제목 목록 조회",
@@ -197,12 +197,12 @@ class LectureChapterListView(APIView):
 class ChapterVideoProgressRetrieveView(APIView):
     """강의 영상 학습 진행률 조회 API (GET)"""
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="강의 영상 학습 진행률 조회",
         description=(
-            "** 특정 강의 영상(chapter_video)에 대한 학생의 학습 진행률을 조회합니다.**\n\n"
+            "** 특정 강의 영상(chapter_video)에 대한 학생의 학습 진행률을 조회합니다. 학생만 해당 강의 영상의 학습 진행률을 조회할 수 있습니다.**\n\n"
             "- `progress`: 영상 학습 진행률 (%)\n"
             "- `is_completed`: 영상 학습 완료 여부 (98% 이상이면 True)\n"
             "- `student_id`: 진행률을 조회하는 학생의 ID"
@@ -216,34 +216,33 @@ class ChapterVideoProgressRetrieveView(APIView):
         tags=["Course"],
     )
     def get(self, request, chapter_video_id):
+        # 강사라면 pass
+        if hasattr(request.user, "instructor"):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        student = getattr(request.user, "student", None)
+        if not student:
+            return Response({"error": "학생 정보가 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
         try:
-            student = Student.objects.get(user=request.user)
             progress_tracking = ProgressTracking.objects.get(student=student, chapter_video_id=chapter_video_id)
-
             return Response(ProgressTrackingSerializer(progress_tracking).data, status=status.HTTP_200_OK)
-
         except ProgressTracking.DoesNotExist:
             return Response(
                 {"error": "이 강의 영상에 대한 학습 기록이 없습니다. 학습을 시작하세요."},
                 status=status.HTTP_404_NOT_FOUND,
-            )
-        except Student.DoesNotExist:
-            return Response({"error": "학생 정보가 등록되지 않았습니다."}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
-            return Response(
-                {"error": "서버 내부 오류", "details": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
 class ChapterVideoProgressCreateView(APIView):
     """강의 영상 학습 진행률 생성 API (POST)"""
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="강의 영상 학습 진행률 생성",
         description=(
-            "** 강의 영상을 학습한 기록을 저장합니다.**\n\n"
+            "** 강의 영상을 학습한 기록을 저장합니다. 학생만 강의 영상을 시청한 기록을 생성할 수 있습니다.**\n\n"
             "- `last_watched_time` : 사용자가 마지막으로 시청한 시간 (초 단위)\n"
             "- `total_duration` : 전체 영상 길이 (초 단위, 프론트엔드 제공)\n"
             "- `progress`는 자동 계산되며, 999.99 이상이면 최대 99.99로 제한됩니다.\n"
@@ -265,20 +264,22 @@ class ChapterVideoProgressCreateView(APIView):
         tags=["Course"],
     )
     def post(self, request, chapter_video_id):
+        if hasattr(request.user, "instructor"):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        student = getattr(request.user, "student", None)
+        if not student:
+            return Response({"error": "학생 계정을 찾을 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
         try:
-            student = Student.objects.get(user=request.user)
             chapter_video = ChapterVideo.objects.get(id=chapter_video_id)
 
             serializer = ProgressTrackingCreateSerializer(
-                data=request.data, context={"request": request, "chapter_video_id": chapter_video_id}  #  context 추가
+                data=request.data, context={"request": request, "chapter_video_id": chapter_video_id}
             )
             serializer.is_valid(raise_exception=True)
             progress_tracking = serializer.save()
-
             return Response(ProgressTrackingSerializer(progress_tracking).data, status=status.HTTP_201_CREATED)
-
-        except Student.DoesNotExist:
-            return Response({"error": "학생 계정을 찾을 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         except ChapterVideo.DoesNotExist:
             return Response({"error": "해당 강의 영상을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
@@ -290,12 +291,12 @@ class ChapterVideoProgressCreateView(APIView):
 class ChapterVideoProgressUpdateView(APIView):
     """강의 영상 학습 진행률 업데이트 API (PATCH)"""
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="강의 영상 학습 진행률 업데이트",
         description=(
-            "특정 강의 영상(chapter_video)의 학습 진행률을 수정합니다.\n\n"
+            "특정 강의 영상(chapter_video)의 학습 진행률을 수정합니다. 학생만 학습 진행률을 수정할 수 있습니다.\n\n"
             "** 주의:**\n"
             "- `total_duration` 값은 **프론트엔드에서 제공 합니다.**\n"
             "- `total_duration`은 백엔드에서 저장되지 않으며, `progress` 및 `is_completed` 계산을 위해 사용됩니다."
@@ -317,20 +318,22 @@ class ChapterVideoProgressUpdateView(APIView):
         tags=["Course"],
     )
     def patch(self, request, chapter_video_id):
+        if hasattr(request.user, "instructor"):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        student = getattr(request.user, "student", None)
+        if not student:
+            return Response({"error": "학생 정보가 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
         try:
-            student = Student.objects.get(user=request.user)
             progress_tracking = ProgressTracking.objects.get(student=student, chapter_video_id=chapter_video_id)
 
             serializer = ProgressTrackingUpdateSerializer(
-                progress_tracking,
-                data=request.data,
-                context={"request": request},  #  total_duration을 전달하기 위해 context 추가
+                progress_tracking, data=request.data, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
             progress_tracking = serializer.save()
-
             return Response(ProgressTrackingSerializer(progress_tracking).data, status=status.HTTP_200_OK)
-
         except ProgressTracking.DoesNotExist:
             return Response(
                 {"error": "진행 데이터를 찾을 수 없습니다. 먼저 POST 요청을 보내주세요."},
@@ -347,7 +350,7 @@ class ChapterVideoDetailView(APIView):
     강의 영상 상세 조회 (chapter_video) - S3 Pre-signed URL 적용
     """
 
-    permission_classes = [IsEnrolledStudent]
+    permission_classes = [IsActiveStudentOrInstructor]
 
     @extend_schema(
         summary="강의 영상 상세 조회 (S3 Pre-signed URL)",
@@ -361,7 +364,7 @@ class ChapterVideoDetailView(APIView):
     )
     def get(self, request, chapter_video_id):
         try:
-            student = Student.objects.get(user=request.user)
+            user = request.user
             video = ChapterVideo.objects.get(id=chapter_video_id)
 
             # Referrer 확인 (일부 요청에는 HTTP_REFERER가 없을 수 있음)
@@ -377,8 +380,16 @@ class ChapterVideoDetailView(APIView):
             if referrer and not any(referrer.startswith(allowed) for allowed in allowed_referrers):
                 return Response({"error": "잘못된 접근입니다."}, status=status.HTTP_403_FORBIDDEN)
 
-            # 사용자 인증 기반 Signed URL 생성
-            signed_url = generate_ncp_signed_url(video.video_url.name, student.id)
+            # 사용자 ID 식별: student 또는 instructor
+            if hasattr(user, "student"):
+                user_id = user.student.id
+            elif hasattr(user, "instructor"):
+                user_id = user.instructor.id
+            else:
+                return Response({"error": "학생 또는 강사만 접근할 수 있습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Signed URL 생성
+            signed_url = generate_ncp_signed_url(video.video_url.name, user_id)
 
             response_data = {
                 "id": video.id,
