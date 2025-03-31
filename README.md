@@ -153,16 +153,16 @@
       </td>
     </tr>
     <tr>
-      <!-- Git -->
+      <!-- GitHub -->
       <td align="center" width="96">
         <img 
-          src="https://skillicons.dev/icons?i=git"
-          alt="Git" 
+          src="https://skillicons.dev/icons?i=github"
+          alt="GitHub" 
           width="65" 
           height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Git';"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=GitHub';"
         />
-        <br>Git
+        <br>GitHub
       </td>
       <!-- Notion -->
       <td align="center" width="96">
