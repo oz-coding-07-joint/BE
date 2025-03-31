@@ -17,8 +17,21 @@
 ## 🗣️ 프로젝트 발표 영상 & 발표 문서
 
 > ### 🗓️ 2025.02.24 - 2024.03.31
-> ### [📑 발표 자료 보기]()
+> ### [📑 발표 자료 보기](https://drive.google.com/file/d/1HlEg7_cfIY-nUI-qigukhAWxRcbXpF_V/view?usp=drive_link)
 
+---
+## 🎥 프로젝트 영상
+1. **랜딩페이지**: [영상 보기](https://drive.google.com/file/d/1r5voa39xVsiq1qQDTakrKv1nOHYYFNUC/view?usp=drive_link)
+2. **회원가입**: [영상 보기](https://drive.google.com/file/d/1YkCrY212nFFDFJYraBWfNIZnYuJg4r9y/view?usp=drive_link)
+3. **소셜로그인**: [영상 보기](https://drive.google.com/file/d/12Ri6jyhiJ8hWH-mt_rzVM1exyoufrE-n/view?usp=drive_link)
+4. **회원정보 변경**: [영상 보기](https://drive.google.com/file/d/19X4MboLouhGRGDx0oJmQUpaYR6aIJEct/view?usp=drive_link)
+5. **비밀번호 변경**: [영상 보기](https://drive.google.com/file/d/1o6CsPtQ3wqvl0OxoXZlerqqVRIqOTPbz/view?usp=drive_link)
+6. **수강신청**: [영상 보기](https://drive.google.com/file/d/1-Z3hGFWI1daKVQB_KWoNUXV4h9UAX-sB/view?usp=drive_link)
+7. **강의수강**: [영상 보기](https://drive.google.com/file/d/1n55z3O6MspQdCzuStmvIE-JOPizC8diH/view?usp=drive_link)
+8. **과제**: [영상 보기](https://drive.google.com/file/d/1vKSYOVMfRYUVuVeZdaauxfWc0jtsBTcA/view?usp=drive_link)
+9. **과제 피드백**: [영상 보기](https://drive.google.com/file/d/1ggdmUawzJ_uhctqTRDnYf1R3bQnKqVLz/view?usp=drive_link)
+10. **리뷰 작성**: [영상 보기](https://drive.google.com/file/d/1e9sJU_n_9PE6tSsk20q1IdDhEZVYKIb2/view?usp=drive_link)
+11. **강사 어드민**: [영상 보기](https://drive.google.com/file/d/1ynYgaT9sz-4qBTGAbl08IFZD4Yp8odol/view?usp=drive_link)
 ---
 ## 🧰 사용 스택
 <hr>
@@ -29,76 +42,160 @@
     <tr>
       <!-- Python -->
       <td align="center" width="96">
-        <img src="https://techstack-generator.vercel.app/python-icon.svg" alt="Python" width="65" height="65" />
+        <img 
+          src="https://techstack-generator.vercel.app/python-icon.svg"
+          alt="Python" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Python';"
+        />
         <br>Python
       </td>
       <!-- Django -->
       <td align="center" width="96">
-        <img src="https://techstack-generator.vercel.app/django-icon.svg" alt="Django" width="65" height="65" />
+        <img 
+          src="https://techstack-generator.vercel.app/django-icon.svg"
+          alt="Django" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Django';"
+        />
         <br>Django
       </td>
       <!-- Poetry -->
       <td align="center" width="96">
-        <img src="https://python-poetry.org/assets/logo.png" alt="Poetry" width="65" height="65" />
+        <img 
+          src="https://python-poetry.org/assets/logo.png"
+          alt="Poetry" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Poetry';"
+        />
         <br>Poetry
       </td>
       <!-- NCP (Naver Cloud Platform) -->
       <td align="center" width="96">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Naver_Cloud_Platform_logo.svg" alt="NCP" width="65" height="65" />
+        <img 
+          src="https://upload.wikimedia.org/wikipedia/commons/8/89/Naver_Cloud_Platform_logo.svg"
+          alt="NCP" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=NCP';"
+        />
         <br>NCP
       </td>
       <!-- NCP Object Storage -->
       <td align="center" width="96">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Amazon-S3-Logo.svg" alt="NCP Object Storage" width="65" height="65" />
+        <img 
+          src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Amazon-S3-Logo.svg"
+          alt="NCP Object Storage" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=ObjectStorage';"
+        />
         <br>NCP Object Storage
       </td>
     </tr>
     <tr>
       <!-- Docker -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=docker" alt="Docker" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=docker"
+          alt="Docker" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Docker';"
+        />
         <br>Docker
       </td>
       <!-- Nginx -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=nginx" alt="Nginx" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=nginx"
+          alt="Nginx" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Nginx';"
+        />
         <br>Nginx
       </td>
       <!-- PostgreSQL -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=postgres" alt="PostgreSQL" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=postgres"
+          alt="PostgreSQL" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Postgres';"
+        />
         <br>PostgreSQL
       </td>
       <!-- Redis -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=redis" alt="Redis" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=redis"
+          alt="Redis" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Redis';"
+        />
         <br>Redis
       </td>
       <!-- Certbot -->
       <td align="center" width="96">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Certbot_logo.svg/1200px-Certbot_logo.svg.png" alt="Certbot" width="65" height="65" />
+        <img 
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Certbot_logo.svg/1200px-Certbot_logo.svg.png"
+          alt="Certbot" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Certbot';"
+        />
         <br>Certbot
       </td>
     </tr>
     <tr>
       <!-- Git -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=git" alt="Git" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=git"
+          alt="Git" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Git';"
+        />
         <br>Git
       </td>
       <!-- Notion -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=notion" alt="Notion" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=notion"
+          alt="Notion" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Notion';"
+        />
         <br>Notion
       </td>
       <!-- Swagger -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=swagger" alt="Swagger" width="65" height="65" />
+        <img 
+          src="https://skillicons.dev/icons?i=swagger"
+          alt="Swagger" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Swagger';"
+        />
         <br>Swagger
       </td>
       <!-- Gunicorn -->
       <td align="center" width="96">
-        <img src="https://raw.githubusercontent.com/benoitc/gunicorn/master/docs/logo.png" alt="Gunicorn" width="65" height="65" />
+        <img 
+          src="https://raw.githubusercontent.com/benoitc/gunicorn/master/docs/logo.png"
+          alt="Gunicorn" 
+          width="65" 
+          height="65"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Gunicorn';"
+        />
         <br>Gunicorn
       </td>
       <!-- 빈 셀 -->
@@ -112,49 +209,96 @@
 
 <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
   <table align="center">
+    <!-- Row 1 -->
     <tr>
       <!-- HTML -->
       <td align="center" width="96">
-        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML" width="65" height="65" />
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=HTML';" />
         <br>HTML
       </td>
       <!-- CSS -->
       <td align="center" width="96">
-        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS" width="65" height="65" />
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=CSS';" />
         <br>CSS
       </td>
       <!-- JavaScript -->
       <td align="center" width="96">
-        <img src="https://techstack-generator.vercel.app/js-icon.svg" alt="JavaScript" width="65" height="65" />
+        <img src="https://techstack-generator.vercel.app/js-icon.svg" alt="JavaScript" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=JS';" />
         <br>JS
       </td>
       <!-- Next.js -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=nextjs" alt="Next.js" width="48" height="48" />
+        <img src="https://skillicons.dev/icons?i=nextjs" alt="Next.js" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Next.js';" />
         <br>Next.js
       </td>
-    </tr>
-    <tr>
       <!-- Tailwind CSS -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=tailwind" alt="Tailwind CSS" width="48" height="48" />
+        <img src="https://skillicons.dev/icons?i=tailwind" alt="Tailwind CSS" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Tailwind';" />
         <br>Tailwind CSS
+      </td>
+    </tr>
+    <!-- Row 2 -->
+    <tr>
+      <!-- TypeScript -->
+      <td align="center" width="96">
+        <img src="https://skillicons.dev/icons?i=typescript" alt="TypeScript" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=TS';" />
+        <br>TypeScript
+      </td>
+      <!-- Zustand -->
+      <td align="center" width="96">
+        <img src="https://raw.githubusercontent.com/pmndrs/branding/master/mark/black.svg" alt="Zustand" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Zustand';" />
+        <br>Zustand
       </td>
       <!-- Axios -->
       <td align="center" width="96">
-        <img src="https://avatars.githubusercontent.com/u/32372333?s=280&v=4" alt="Axios" width="48" height="48" />
+        <img src="https://avatars.githubusercontent.com/u/32372333?s=280&v=4" alt="Axios" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Axios';" />
         <br>Axios
       </td>
-      <!-- npm -->
+      <!-- Tanstack Query -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=npm" alt="npm" width="48" height="48" />
-        <br>npm
+        <img src="https://raw.githubusercontent.com/TanStack/query/main/media/react-query-logo.png" alt="Tanstack Query" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Tanstack';" />
+        <br>Tanstack Query
       </td>
       <!-- Figma -->
       <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=figma" alt="Figma" width="48" height="48" />
+        <img src="https://skillicons.dev/icons?i=figma" alt="Figma" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Figma';" />
         <br>Figma
       </td>
+    </tr>
+    <!-- Row 3 -->
+    <tr>
+      <!-- Vercel -->
+      <td align="center" width="96">
+        <img src="https://skillicons.dev/icons?i=vercel" alt="Vercel" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Vercel';" />
+        <br>Vercel
+      </td>
+      <!-- GitHub -->
+      <td align="center" width="96">
+        <img src="https://skillicons.dev/icons?i=github" alt="GitHub" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=GitHub';" />
+        <br>GitHub
+      </td>
+      <!-- Notion -->
+      <td align="center" width="96">
+        <img src="https://skillicons.dev/icons?i=notion" alt="Notion" width="48" height="48"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Notion';" />
+        <br>Notion
+      </td>
+      <!-- 빈 셀 -->
+      <td align="center" width="96">&nbsp;</td>
+      <!-- 빈 셀 -->
+      <td align="center" width="96">&nbsp;</td>
     </tr>
   </table>
 </div>
