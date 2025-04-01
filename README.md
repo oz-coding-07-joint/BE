@@ -36,270 +36,44 @@
 <hr>
 <h2 align="center"> Backend </h2>
 
-<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
-  <table align="center">
-    <tr>
-      <!-- Python -->
-      <td align="center" width="96">
-        <img 
-          src="https://techstack-generator.vercel.app/python-icon.svg"
-          alt="Python" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Python';"
-        />
-        <br>Python
-      </td>
-      <!-- Django -->
-      <td align="center" width="96">
-        <img 
-          src="https://techstack-generator.vercel.app/django-icon.svg"
-          alt="Django" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Django';"
-        />
-        <br>Django
-      </td>
-      <!-- Poetry -->
-      <td align="center" width="96">
-        <img 
-          src="https://python-poetry.org/assets/logo.png"
-          alt="Poetry" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Poetry';"
-        />
-        <br>Poetry
-      </td>
-      <!-- NCP (Naver Cloud Platform) -->
-      <td align="center" width="96">
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/8/89/Naver_Cloud_Platform_logo.svg"
-          alt="NCP" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=NCP';"
-        />
-        <br>NCP
-      </td>
-      <!-- NCP Object Storage -->
-      <td align="center" width="96">
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Amazon-S3-Logo.svg"
-          alt="NCP Object Storage" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=ObjectStorage';"
-        />
-        <br>NCP Object Storage
-      </td>
-    </tr>
-    <tr>
-      <!-- Docker -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=docker"
-          alt="Docker" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Docker';"
-        />
-        <br>Docker
-      </td>
-      <!-- Nginx -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=nginx"
-          alt="Nginx" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Nginx';"
-        />
-        <br>Nginx
-      </td>
-      <!-- PostgreSQL -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=postgres"
-          alt="PostgreSQL" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Postgres';"
-        />
-        <br>PostgreSQL
-      </td>
-      <!-- Redis -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=redis"
-          alt="Redis" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Redis';"
-        />
-        <br>Redis
-      </td>
-      <!-- Certbot -->
-      <td align="center" width="96">
-        <img 
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Certbot_logo.svg/1200px-Certbot_logo.svg.png"
-          alt="Certbot" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Certbot';"
-        />
-        <br>Certbot
-      </td>
-    </tr>
-    <tr>
-      <!-- GitHub -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=github"
-          alt="GitHub" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=GitHub';"
-        />
-        <br>GitHub
-      </td>
-      <!-- Notion -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=notion"
-          alt="Notion" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Notion';"
-        />
-        <br>Notion
-      </td>
-      <!-- Swagger -->
-      <td align="center" width="96">
-        <img 
-          src="https://skillicons.dev/icons?i=swagger"
-          alt="Swagger" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Swagger';"
-        />
-        <br>Swagger
-      </td>
-      <!-- Gunicorn -->
-      <td align="center" width="96">
-        <img 
-          src="https://raw.githubusercontent.com/benoitc/gunicorn/master/docs/logo.png"
-          alt="Gunicorn" 
-          width="65" 
-          height="65"
-          onerror="this.onerror=null;this.src='https://via.placeholder.com/65?text=Gunicorn';"
-        />
-        <br>Gunicorn
-      </td>
-      <!-- 빈 셀 -->
-      <td align="center" width="96">&nbsp;</td>
-    </tr>
-  </table>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white">
+  <img src="https://img.shields.io/badge/Poetry-FF6F00?style=for-the-badge&logo=&logoColor=white">
+  <img src="https://img.shields.io/badge/NCP-00C853?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
+  <br>
+  <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white">
+  <img src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white">
+  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white">
+  <img src="https://img.shields.io/badge/Certbot-2E8B57?style=for-the-badge">
+  <br>
+  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
+  <img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white">
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white">
+  <img src="https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge">
 </div>
 
 <hr>
 <h2 align="center"> Frontend </h2>
 
-<div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
-  <table align="center">
-    <!-- Row 1 -->
-    <tr>
-      <!-- HTML -->
-      <td align="center" width="96">
-        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=HTML';" />
-        <br>HTML
-      </td>
-      <!-- CSS -->
-      <td align="center" width="96">
-        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=CSS';" />
-        <br>CSS
-      </td>
-      <!-- JavaScript -->
-      <td align="center" width="96">
-        <img src="https://techstack-generator.vercel.app/js-icon.svg" alt="JavaScript" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=JS';" />
-        <br>JS
-      </td>
-      <!-- Next.js -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=nextjs" alt="Next.js" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Next.js';" />
-        <br>Next.js
-      </td>
-      <!-- Tailwind CSS -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=tailwind" alt="Tailwind CSS" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Tailwind';" />
-        <br>Tailwind CSS
-      </td>
-    </tr>
-    <!-- Row 2 -->
-    <tr>
-      <!-- TypeScript -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=typescript" alt="TypeScript" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=TS';" />
-        <br>TypeScript
-      </td>
-      <!-- Zustand -->
-      <td align="center" width="96">
-        <img src="https://raw.githubusercontent.com/pmndrs/branding/master/mark/black.svg" alt="Zustand" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Zustand';" />
-        <br>Zustand
-      </td>
-      <!-- Axios -->
-      <td align="center" width="96">
-        <img src="https://avatars.githubusercontent.com/u/32372333?s=280&v=4" alt="Axios" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Axios';" />
-        <br>Axios
-      </td>
-      <!-- Tanstack Query -->
-      <td align="center" width="96">
-        <img src="https://raw.githubusercontent.com/TanStack/query/main/media/react-query-logo.png" alt="Tanstack Query" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Tanstack';" />
-        <br>Tanstack Query
-      </td>
-      <!-- Figma -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=figma" alt="Figma" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Figma';" />
-        <br>Figma
-      </td>
-    </tr>
-    <!-- Row 3 -->
-    <tr>
-      <!-- Vercel -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=vercel" alt="Vercel" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Vercel';" />
-        <br>Vercel
-      </td>
-      <!-- GitHub -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=github" alt="GitHub" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=GitHub';" />
-        <br>GitHub
-      </td>
-      <!-- Notion -->
-      <td align="center" width="96">
-        <img src="https://skillicons.dev/icons?i=notion" alt="Notion" width="48" height="48"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/48?text=Notion';" />
-        <br>Notion
-      </td>
-      <!-- 빈 셀 -->
-      <td align="center" width="96">&nbsp;</td>
-      <!-- 빈 셀 -->
-      <td align="center" width="96">&nbsp;</td>
-    </tr>
-  </table>
+<div align="center">
+  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white">
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white">
+  <br>
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white">
+  <img src="https://img.shields.io/badge/Zustand-764ABC?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white">
+  <img src="https://img.shields.io/badge/Tanstack_Query-FF5A5F?style=for-the-badge&logo=react-query&logoColor=white">
+  <br>
+  <img src="https://img.shields.io/badge/Figma-EA4C89?style=for-the-badge&logo=figma&logoColor=white">
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white">
+  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white">
+  <img src="https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white">
 </div>
 
 
