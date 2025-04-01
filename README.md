@@ -33,6 +33,13 @@
 11. **강사 어드민**: [영상 보기](https://drive.google.com/file/d/1ynYgaT9sz-4qBTGAbl08IFZD4Yp8odol/view?usp=drive_link)
 ---
 ## 🧰 사용 스택
+
+
+### System Architecture
+
+<img src="https://cdn.discordapp.com/attachments/1343403701737619493/1356601945816694854/OZ_.png?ex=67ed2984&is=67ebd804&hm=4f1f54e5fdb2f386e98fde311c49e1fdc8322a8ad00b28c58a5dd0274831179c&"/>
+
+
 <hr>
 <h2 align="center"> Backend </h2>
 
