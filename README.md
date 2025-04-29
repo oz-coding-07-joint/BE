@@ -160,11 +160,6 @@
 > | pencil2 :    | 단순 오타 수정            | 
 
 
-### Pull Request
->### Title
->[Feat] 최애롤 백엔드 API 설계 및 주요 기능 구현
-
-
 > ### PR Type
   > - [ ] FEAT: 새로운 기능 구현
   > - [ ] FIX: 버그 수정
